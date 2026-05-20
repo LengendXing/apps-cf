@@ -1,5 +1,19 @@
 # Apps Startpage - 变更记录
 
+## v0.3.0 - 2026-05-20
+### 变更内容
+- 修复 GitHub OAuth 登录：GITHUB_CLIENT_ID 加入 wrangler.toml [vars]，GITHUB_CLIENT_SECRET 通过 deploy.yml 自动设置 CF Secret
+- 重建前端源码（Vue3 + Vite + Tailwind），原仓库仅有编译产物无源码
+- 登录页背景根据北京时间动态切换：6:00-18:00 白色，18:00-6:00 黑色
+- 修复 OAuth 回调 token 处理：前端从 URL query 读取 token 并存入 localStorage
+- 更新 deploy.yml：部署前自动执行 wrangler secret put GITHUB_CLIENT_SECRET
+- 前端 API 层使用 axios 拦截器，1001 错误码自动跳转登录页
+
+### 影响范围
+- 后端: wrangler.toml (新增 GITHUB_CLIENT_ID var), deploy.yml (新增 secret 设置步骤)
+- 前端: 全部重建 — Login.vue, Home.vue, Dashboard.vue, AdminTools.vue, AdminUsers.vue, AdminAudit.vue, AdminConfigs.vue, SystemConfig.vue, MainLayout.vue, API层, i18n, router, Pinia auth store
+- 配置: .gitignore (新增 frontend/node_modules/)
+
 ## v0.2.0 - 2026-05-20
 ### 变更内容
 - 配置集(Config)移除 tool_id 字段，成为独立实体

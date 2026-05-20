@@ -213,40 +213,26 @@ fn path_id(req: &Request) -> Result<i64> {
 }
 
 async fn gh_fetch(method: &str, url: &str, body: Option<&str>, auth_token: Option<&str>) -> Result<serde_json::Value> {
-    let opts = js_sys::Object::new();
-    js_sys::Reflect::set(&opts, &wasm_bindgen::JsValue::from_str("method"), &wasm_bindgen::JsValue::from_str(method))
-        .map_err(|e| worker::Error::RustError(format!("{:?}", e)))?;
-    let headers = js_sys::Object::new();
-    js_sys::Reflect::set(&headers, &wasm_bindgen::JsValue::from_str("Accept"), &wasm_bindgen::JsValue::from_str("application/json"))
-        .map_err(|e| worker::Error::RustError(format!("{:?}", e)))?;
-    js_sys::Reflect::set(&headers, &wasm_bindgen::JsValue::from_str("User-Agent"), &wasm_bindgen::JsValue::from_str("apps-cf"))
-        .map_err(|e| worker::Error::RustError(format!("{:?}", e)))?;
+    let init = web_sys::RequestInit::new();
+    init.set_method(method);
+    let headers = web_sys::Headers::new().map_err(|e| worker::Error::RustError(format!("{:?}", e)))?;
+    headers.set("Accept", "application/json").map_err(|e| worker::Error::RustError(format!("{:?}", e)))?;
+    headers.set("User-Agent", "apps-cf").map_err(|e| worker::Error::RustError(format!("{:?}", e)))?;
     if let Some(t) = auth_token {
-        js_sys::Reflect::set(&headers, &wasm_bindgen::JsValue::from_str("Authorization"), &wasm_bindgen::JsValue::from_str(&format!("token {}", t)))
-            .map_err(|e| worker::Error::RustError(format!("{:?}", e)))?;
+        headers.set("Authorization", &format!("token {}", t)).map_err(|e| worker::Error::RustError(format!("{:?}", e)))?;
     }
     if body.is_some() {
-        js_sys::Reflect::set(&headers, &wasm_bindgen::JsValue::from_str("Content-Type"), &wasm_bindgen::JsValue::from_str("application/x-www-form-urlencoded"))
-            .map_err(|e| worker::Error::RustError(format!("{:?}", e)))?;
+        headers.set("Content-Type", "application/x-www-form-urlencoded").map_err(|e| worker::Error::RustError(format!("{:?}", e)))?;
     }
-    js_sys::Reflect::set(&opts, &wasm_bindgen::JsValue::from_str("headers"), &headers)
-        .map_err(|e| worker::Error::RustError(format!("{:?}", e)))?;
+    init.set_headers(&headers);
     if let Some(b) = body {
-        js_sys::Reflect::set(&opts, &wasm_bindgen::JsValue::from_str("body"), &wasm_bindgen::JsValue::from_str(b))
-            .map_err(|e| worker::Error::RustError(format!("{:?}", e)))?;
+        init.set_body(&wasm_bindgen::JsValue::from_str(b));
     }
-    let fetch_fn: js_sys::Function = js_sys::Reflect::get(&js_sys::global(), &wasm_bindgen::JsValue::from_str("fetch"))
-        .map_err(|e| worker::Error::RustError(format!("{:?}", e)))?.into();
-    let promise = fetch_fn.call2(&wasm_bindgen::JsValue::NULL, &wasm_bindgen::JsValue::from_str(url), &opts)
-        .map_err(|e| worker::Error::RustError(format!("{:?}", e)))?;
-    let resp_val = wasm_bindgen_futures::JsFuture::from(js_sys::Promise::from(promise)).await
-        .map_err(|e| worker::Error::RustError(format!("{:?}", e)))?;
-    let resp: web_sys::Response = resp_val.into();
-    let json_promise = resp.json().map_err(|e| worker::Error::RustError(format!("{:?}", e)))?;
-    let json_val = wasm_bindgen_futures::JsFuture::from(json_promise).await
-        .map_err(|e| worker::Error::RustError(format!("{:?}", e)))?;
-    let text = js_sys::JSON::stringify(&json_val).map_err(|e| worker::Error::RustError(format!("{:?}", e)))?.as_string().unwrap_or_default();
-    Ok(serde_json::from_str(&text)?)
+    let req = web_sys::Request::new_with_str_and_init(url, &init)
+        .map_err(|e| worker::Error::RustError(format!("Request init error: {:?}", e)))?;
+    let worker_req: worker::Request = req.into();
+    let mut resp = worker::Fetch::Request(worker_req).send().await.map_err(|e| worker::Error::RustError(format!("Fetch error: {:?}", e)))?;
+    resp.json().await.map_err(|e| worker::Error::RustError(format!("JSON parse error: {:?}", e)))
 }
 
 fn json_resp(data: &ApiResponse) -> Result<Response> {
@@ -565,9 +551,12 @@ async fn main(req: Request, env: Env, _ctx: Context) -> Result<Response> {
 
             // Step 1: Exchange code for access token (GitHub requires form-urlencoded)
             let token_body = format!("client_id={}&client_secret={}&code={}", client_id, client_secret, code);
-            let token_resp: serde_json::Value = gh_fetch("POST", "https://github.com/login/oauth/access_token", Some(&token_body), None).await?;
+            let token_resp: serde_json::Value = match gh_fetch("POST", "https://github.com/login/oauth/access_token", Some(&token_body), None).await {
+                Ok(v) => v,
+                Err(e) => return json_resp(&ApiResponse::err(1002, &format!("Token exchange error: {}", e))),
+            };
             let access_token = token_resp["access_token"].as_str().unwrap_or("").to_string();
-            if access_token.is_empty() { return json_resp(&ApiResponse::err(1002, "GitHub OAuth failed")); }
+            if access_token.is_empty() { return json_resp(&ApiResponse::err(1002, &format!("Token exchange response: {}", token_resp))); }
 
             // Step 2: Get user profile
             let user_resp: serde_json::Value = gh_fetch("GET", "https://api.github.com/user", None, Some(&access_token)).await?;

@@ -15,6 +15,7 @@ id = "f1278ff28c664a6eae27e8d866a1fc62"
 
 [vars]
 APP_URL = "https://apps.sential.eu.cc"
+GITHUB_CLIENT_ID = "Ov23liNm6UI3Scq74VxG"
 
 routes = [
   { pattern = "apps.sential.eu.cc", custom_domain = true }
