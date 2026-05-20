@@ -12,3 +12,10 @@ command = "worker-build --release"
 [[kv_namespaces]]
 binding = "APPS_DATA"
 id = "f1278ff28c664a6eae27e8d866a1fc62"
+
+[vars]
+APP_URL = "https://apps.sential.eu.cc"
+
+routes = [
+  { pattern = "apps.sential.eu.cc", custom_domain = true }
+]

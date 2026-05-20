@@ -36,7 +36,7 @@ struct Script {
 
 #[derive(Serialize, Deserialize, Clone)]
 struct Config {
-    id: i64, tool_id: i64, name: String, format: String,
+    id: i64, name: String, format: String,
     content: String, sort_order: i64, copy_count: i64,
 }
 
@@ -69,9 +69,12 @@ impl ApiResponse {
     platform: Option<String>, tags: Option<Vec<String>>, sort_order: Option<i64>,
 }
 #[derive(Deserialize)] struct ConfigInput {
-    tool_id: Option<i64>, name: Option<String>, format: Option<String>,
+    name: Option<String>, format: Option<String>,
     content: Option<String>, sort_order: Option<i64>,
 }
+#[derive(Serialize, Deserialize, Clone)]
+struct SystemConfig { layout: String }
+#[derive(Deserialize)] struct SystemConfigInput { layout: Option<String> }
 
 // === KV Helpers ===
 
@@ -87,6 +90,7 @@ async fn ensure_seeded(kv: &KvStore) -> Result<()> {
     kv.put("audit_logs", &Vec::<AuditLog>::new())?.execute().await?;
     kv.put("scripts", &Vec::<Script>::new())?.execute().await?;
     kv.put("configs", &Vec::<Config>::new())?.execute().await?;
+    kv.put("system_config", &SystemConfig { layout: "left".to_string() })?.execute().await?;
     kv.put("next_id", 1000_i64)?.execute().await?;
     kv.put("access_password", "dabendi66")?.execute().await?;
     kv.put("seeded", "1")?.execute().await?;
@@ -487,6 +491,86 @@ async fn main(req: Request, env: Env, _ctx: Context) -> Result<Response> {
             log_action(&kv, uid, "update", "setting", None, "Updated access password").await?;
             json_resp(&ApiResponse::ok(serde_json::json!({"updated":true})))
         })
+        // --- System Config ---
+        .get_async("/api/settings/system-config", |req, env| async move {
+            let kv = env.kv("APPS_DATA")?;
+            if let Err(_) = get_auth_user(&req, &kv).await { return json_resp_auth(&ApiResponse::err(1001, "Unauthorized")); }
+            let sc: SystemConfig = kv.get("system_config").json().await?.unwrap_or(SystemConfig { layout: "left".to_string() });
+            json_resp(&ApiResponse::ok(serde_json::to_value(&sc)?))
+        })
+        .put_async("/api/settings/system-config", |mut req, env| async move {
+            let kv = env.kv("APPS_DATA")?;
+            let (uid, _) = match get_auth_user(&req, &kv).await { Ok(v) => v, Err(_) => return json_resp_auth(&ApiResponse::err(1001, "Unauthorized")) };
+            let input: SystemConfigInput = req.json().await?;
+            let mut sc: SystemConfig = kv.get("system_config").json().await?.unwrap_or(SystemConfig { layout: "left".to_string() });
+            if let Some(l) = input.layout {
+                if l != "left" && l != "top" { return json_resp(&ApiResponse::err(1003, "layout must be 'left' or 'top'")); }
+                sc.layout = l;
+            }
+            kv.put("system_config", &sc)?.execute().await?;
+            log_action(&kv, uid, "update", "system_config", None, &format!("Updated system config layout to {}", sc.layout)).await?;
+            json_resp(&ApiResponse::ok(serde_json::to_value(&sc)?))
+        })
+        // --- GitHub OAuth ---
+        .get_async("/api/auth/github", |_req, env| async move {
+            let client_id = env.var("GITHUB_CLIENT_ID")?.to_string();
+            let redirect_uri = format!("{}/api/auth/github/callback", env.var("APP_URL")?.to_string());
+            let url = format!("https://github.com/login/oauth/authorize?client_id={}&redirect_uri={}&scope=user:email", client_id, redirect_uri);
+            Response::redirect(url.parse()?)
+        })
+        .get_async("/api/auth/github/callback", |req, env| async move {
+            let kv = env.kv("APPS_DATA")?;
+            let params = parse_params(&req)?;
+            let code = params.iter().find(|(k,_)|k=="code").map(|(_,v)|v.to_string()).unwrap_or_default();
+            if code.is_empty() { return json_resp(&ApiResponse::err(1003, "Missing authorization code")); }
+            let client_id = env.var("GITHUB_CLIENT_ID")?.to_string();
+            let client_secret = env.var("GITHUB_CLIENT_SECRET")?.to_string();
+            let token_resp: serde_json::Value = reqwest::Client::new()
+                .post("https://github.com/login/oauth/access_token")
+                .header("Accept", "application/json")
+                .json(&serde_json::json!({"client_id":client_id,"client_secret":client_secret,"code":code}))
+                .send().await.map_err(|e| worker::Error::RustError(e.to_string()))?
+                .json().await.map_err(|e| worker::Error::RustError(e.to_string()))?;
+            let access_token = token_resp["access_token"].as_str().unwrap_or("").to_string();
+            if access_token.is_empty() { return json_resp(&ApiResponse::err(1002, "GitHub OAuth failed")); }
+            let user_resp: serde_json::Value = reqwest::Client::new()
+                .get("https://api.github.com/user")
+                .header("Authorization", format!("token {}", access_token))
+                .header("User-Agent", "apps-cf")
+                .send().await.map_err(|e| worker::Error::RustError(e.to_string()))?
+                .json().await.map_err(|e| worker::Error::RustError(e.to_string()))?;
+            let gh_email = user_resp["email"].as_str().unwrap_or("").to_string();
+            let gh_login = user_resp["login"].as_str().unwrap_or("github_user").to_string();
+            let _gh_id = user_resp["id"].as_i64().unwrap_or(0);
+            let emails_resp: Vec<serde_json::Value> = reqwest::Client::new()
+                .get("https://api.github.com/user/emails")
+                .header("Authorization", format!("token {}", access_token))
+                .header("User-Agent", "apps-cf")
+                .send().await.map_err(|e| worker::Error::RustError(e.to_string()))?
+                .json().await.map_err(|e| worker::Error::RustError(e.to_string()))?;
+            let mut all_emails = vec![gh_email.clone()];
+            for e in &emails_resp {
+                if let Some(email) = e["email"].as_str() { all_emails.push(email.to_string()); }
+            }
+            let admin_emails: Vec<&str> = vec!["mysinsy@163.com", "scx@polofox.com", "fntp66@gmail.com"];
+            let is_admin = all_emails.iter().any(|e| admin_emails.contains(&e.as_str()));
+            if !is_admin { return json_resp(&ApiResponse::err(1002, "Access denied: not an admin")); }
+            let mut users = kv_users(&kv).await?;
+            let _uid = match users.iter().find(|u| u.email == gh_login || u.username == gh_login) {
+                Some(u) => u.id,
+                None => {
+                    let new_id = alloc_id(&kv).await?;
+                    users.push(User { id: new_id, username: gh_login.clone(), email: gh_email.clone(), password: String::new(), role: "admin".to_string(), is_active: true });
+                    kv.put("users", &users)?.execute().await?;
+                    new_id
+                }
+            };
+            let token = make_jwt(&format!(r#"{{"username":"{}","role":"admin"}}"#, gh_login));
+            let app_url = env.var("APP_URL")?.to_string();
+            let mut r = Response::redirect(format!("{}/admin?token={}", app_url, token).parse()?)?;
+            r.headers_mut().set("Access-Control-Allow-Origin", "*")?;
+            Ok(r)
+        })
         // --- Audit Logs ---
         .get_async("/api/audit-logs", |req, env| async move {
             let kv = env.kv("APPS_DATA")?;
@@ -585,9 +669,6 @@ async fn main(req: Request, env: Env, _ctx: Context) -> Result<Response> {
             let kv = env.kv("APPS_DATA")?;
             let params = parse_params(&req)?;
             let mut configs = kv_configs(&kv).await?;
-            if let Some(tid) = params.iter().find(|(k,_)|k=="tool_id").and_then(|(_,v)|v.parse::<i64>().ok()) {
-                configs.retain(|c|c.tool_id==tid);
-            }
             if let Some(f) = params.iter().find(|(k,_)|k=="format").map(|(_,v)|v.to_lowercase()) {
                 if !f.is_empty() { configs.retain(|c|c.format.to_lowercase()==f); }
             }
@@ -606,12 +687,11 @@ async fn main(req: Request, env: Env, _ctx: Context) -> Result<Response> {
             let kv = env.kv("APPS_DATA")?;
             let (uid, _) = match get_auth_user(&req, &kv).await { Ok(v) => v, Err(_) => return json_resp_auth(&ApiResponse::err(1001, "Unauthorized")) };
             let input: ConfigInput = req.json().await?;
-            let tool_id = input.tool_id.unwrap_or(0);
             let name = input.name.unwrap_or_default();
-            if tool_id==0 || name.is_empty() { return json_resp(&ApiResponse::err(1003, "tool_id and name are required")); }
+            if name.is_empty() { return json_resp(&ApiResponse::err(1003, "Config name is required")); }
             let id = alloc_id(&kv).await?;
             let config = Config {
-                id, tool_id, name, format: input.format.unwrap_or_else(||"text".to_string()),
+                id, name, format: input.format.unwrap_or_else(||"text".to_string()),
                 content: input.content.unwrap_or_default(), sort_order: input.sort_order.unwrap_or(0),
                 copy_count: 0,
             };
@@ -629,7 +709,6 @@ async fn main(req: Request, env: Env, _ctx: Context) -> Result<Response> {
             let mut configs = kv_configs(&kv).await?;
             let result = match configs.iter_mut().find(|c|c.id==id) {
                 Some(config) => {
-                    if let Some(t) = input.tool_id { config.tool_id = t; }
                     if let Some(n) = input.name { config.name = n; }
                     if let Some(f) = input.format { config.format = f; }
                     if let Some(c) = input.content { config.content = c; }
