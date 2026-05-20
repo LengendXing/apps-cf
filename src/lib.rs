@@ -268,7 +268,7 @@ async fn main(req: Request, env: Env, _ctx: Context) -> Result<Response> {
     let kv = env.kv("APPS_DATA")?;
     ensure_seeded(&kv).await?;
 
-    Router::new()
+    let result = Router::new()
         .get_async("/health", |_req, _env| async move {
             json_resp(&ApiResponse::ok(serde_json::json!({"status":"ok","version":"0.1.0"})))
         })
@@ -776,5 +776,10 @@ async fn main(req: Request, env: Env, _ctx: Context) -> Result<Response> {
             Ok(r)
         })
         .run(req, env)
-        .await
+        .await;
+
+    match result {
+        Ok(resp) => Ok(resp),
+        Err(e) => json_resp(&ApiResponse::err(500, &format!("{}", e))),
+    }
 }
