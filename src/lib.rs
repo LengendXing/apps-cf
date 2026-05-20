@@ -212,6 +212,43 @@ fn path_id(req: &Request) -> Result<i64> {
     Ok(url.path().rsplit('/').next().unwrap_or("0").parse().unwrap_or(0))
 }
 
+async fn gh_fetch(method: &str, url: &str, body: Option<&str>, auth_token: Option<&str>) -> Result<serde_json::Value> {
+    let opts = js_sys::Object::new();
+    js_sys::Reflect::set(&opts, &wasm_bindgen::JsValue::from_str("method"), &wasm_bindgen::JsValue::from_str(method))
+        .map_err(|e| worker::Error::RustError(format!("{:?}", e)))?;
+    let headers = js_sys::Object::new();
+    js_sys::Reflect::set(&headers, &wasm_bindgen::JsValue::from_str("Accept"), &wasm_bindgen::JsValue::from_str("application/json"))
+        .map_err(|e| worker::Error::RustError(format!("{:?}", e)))?;
+    js_sys::Reflect::set(&headers, &wasm_bindgen::JsValue::from_str("User-Agent"), &wasm_bindgen::JsValue::from_str("apps-cf"))
+        .map_err(|e| worker::Error::RustError(format!("{:?}", e)))?;
+    if let Some(t) = auth_token {
+        js_sys::Reflect::set(&headers, &wasm_bindgen::JsValue::from_str("Authorization"), &wasm_bindgen::JsValue::from_str(&format!("token {}", t)))
+            .map_err(|e| worker::Error::RustError(format!("{:?}", e)))?;
+    }
+    if body.is_some() {
+        js_sys::Reflect::set(&headers, &wasm_bindgen::JsValue::from_str("Content-Type"), &wasm_bindgen::JsValue::from_str("application/json"))
+            .map_err(|e| worker::Error::RustError(format!("{:?}", e)))?;
+    }
+    js_sys::Reflect::set(&opts, &wasm_bindgen::JsValue::from_str("headers"), &headers)
+        .map_err(|e| worker::Error::RustError(format!("{:?}", e)))?;
+    if let Some(b) = body {
+        js_sys::Reflect::set(&opts, &wasm_bindgen::JsValue::from_str("body"), &wasm_bindgen::JsValue::from_str(b))
+            .map_err(|e| worker::Error::RustError(format!("{:?}", e)))?;
+    }
+    let fetch_fn: js_sys::Function = js_sys::Reflect::get(&js_sys::global(), &wasm_bindgen::JsValue::from_str("fetch"))
+        .map_err(|e| worker::Error::RustError(format!("{:?}", e)))?.into();
+    let promise = fetch_fn.call2(&wasm_bindgen::JsValue::NULL, &wasm_bindgen::JsValue::from_str(url), &opts)
+        .map_err(|e| worker::Error::RustError(format!("{:?}", e)))?;
+    let resp_val = wasm_bindgen_futures::JsFuture::from(js_sys::Promise::from(promise)).await
+        .map_err(|e| worker::Error::RustError(format!("{:?}", e)))?;
+    let resp: web_sys::Response = resp_val.into();
+    let json_promise = resp.json().map_err(|e| worker::Error::RustError(format!("{:?}", e)))?;
+    let json_val = wasm_bindgen_futures::JsFuture::from(json_promise).await
+        .map_err(|e| worker::Error::RustError(format!("{:?}", e)))?;
+    let text = js_sys::JSON::stringify(&json_val).map_err(|e| worker::Error::RustError(format!("{:?}", e)))?.as_string().unwrap_or_default();
+    Ok(serde_json::from_str(&text)?)
+}
+
 fn json_resp(data: &ApiResponse) -> Result<Response> {
     let mut r = Response::from_json(data)?;
     r.headers_mut().set("Content-Type", "application/json")?;
@@ -525,36 +562,31 @@ async fn main(req: Request, env: Env, _ctx: Context) -> Result<Response> {
             if code.is_empty() { return json_resp(&ApiResponse::err(1003, "Missing authorization code")); }
             let client_id = env.var("GITHUB_CLIENT_ID")?.to_string();
             let client_secret = env.var("GITHUB_CLIENT_SECRET")?.to_string();
-            let token_resp: serde_json::Value = reqwest::Client::new()
-                .post("https://github.com/login/oauth/access_token")
-                .header("Accept", "application/json")
-                .json(&serde_json::json!({"client_id":client_id,"client_secret":client_secret,"code":code}))
-                .send().await.map_err(|e| worker::Error::RustError(e.to_string()))?
-                .json().await.map_err(|e| worker::Error::RustError(e.to_string()))?;
+
+            // Step 1: Exchange code for access token
+            let token_body = serde_json::json!({"client_id":client_id,"client_secret":client_secret,"code":code}).to_string();
+            let token_resp: serde_json::Value = gh_fetch("POST", "https://github.com/login/oauth/access_token", Some(&token_body), None).await?;
             let access_token = token_resp["access_token"].as_str().unwrap_or("").to_string();
             if access_token.is_empty() { return json_resp(&ApiResponse::err(1002, "GitHub OAuth failed")); }
-            let user_resp: serde_json::Value = reqwest::Client::new()
-                .get("https://api.github.com/user")
-                .header("Authorization", format!("token {}", access_token))
-                .header("User-Agent", "apps-cf")
-                .send().await.map_err(|e| worker::Error::RustError(e.to_string()))?
-                .json().await.map_err(|e| worker::Error::RustError(e.to_string()))?;
+
+            // Step 2: Get user profile
+            let user_resp: serde_json::Value = gh_fetch("GET", "https://api.github.com/user", None, Some(&access_token)).await?;
             let gh_email = user_resp["email"].as_str().unwrap_or("").to_string();
             let gh_login = user_resp["login"].as_str().unwrap_or("github_user").to_string();
-            let _gh_id = user_resp["id"].as_i64().unwrap_or(0);
-            let emails_resp: Vec<serde_json::Value> = reqwest::Client::new()
-                .get("https://api.github.com/user/emails")
-                .header("Authorization", format!("token {}", access_token))
-                .header("User-Agent", "apps-cf")
-                .send().await.map_err(|e| worker::Error::RustError(e.to_string()))?
-                .json().await.map_err(|e| worker::Error::RustError(e.to_string()))?;
+
+            // Step 3: Get all user emails
+            let emails_resp: serde_json::Value = gh_fetch("GET", "https://api.github.com/user/emails", None, Some(&access_token)).await?;
             let mut all_emails = vec![gh_email.clone()];
-            for e in &emails_resp {
-                if let Some(email) = e["email"].as_str() { all_emails.push(email.to_string()); }
+            if let Some(arr) = emails_resp.as_array() {
+                for e in arr { if let Some(email) = e["email"].as_str() { all_emails.push(email.to_string()); } }
             }
+
+            // Check admin whitelist
             let admin_emails: Vec<&str> = vec!["mysinsy@163.com", "scx@polofox.com", "fntp66@gmail.com"];
             let is_admin = all_emails.iter().any(|e| admin_emails.contains(&e.as_str()));
             if !is_admin { return json_resp(&ApiResponse::err(1002, "Access denied: not an admin")); }
+
+            // Create/update user
             let mut users = kv_users(&kv).await?;
             let _uid = match users.iter().find(|u| u.email == gh_login || u.username == gh_login) {
                 Some(u) => u.id,
