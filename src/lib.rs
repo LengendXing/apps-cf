@@ -226,7 +226,7 @@ async fn gh_fetch(method: &str, url: &str, body: Option<&str>, auth_token: Optio
             .map_err(|e| worker::Error::RustError(format!("{:?}", e)))?;
     }
     if body.is_some() {
-        js_sys::Reflect::set(&headers, &wasm_bindgen::JsValue::from_str("Content-Type"), &wasm_bindgen::JsValue::from_str("application/json"))
+        js_sys::Reflect::set(&headers, &wasm_bindgen::JsValue::from_str("Content-Type"), &wasm_bindgen::JsValue::from_str("application/x-www-form-urlencoded"))
             .map_err(|e| worker::Error::RustError(format!("{:?}", e)))?;
     }
     js_sys::Reflect::set(&opts, &wasm_bindgen::JsValue::from_str("headers"), &headers)
@@ -563,8 +563,8 @@ async fn main(req: Request, env: Env, _ctx: Context) -> Result<Response> {
             let client_id = env.var("GITHUB_CLIENT_ID")?.to_string();
             let client_secret = env.var("GITHUB_CLIENT_SECRET")?.to_string();
 
-            // Step 1: Exchange code for access token
-            let token_body = serde_json::json!({"client_id":client_id,"client_secret":client_secret,"code":code}).to_string();
+            // Step 1: Exchange code for access token (GitHub requires form-urlencoded)
+            let token_body = format!("client_id={}&client_secret={}&code={}", client_id, client_secret, code);
             let token_resp: serde_json::Value = gh_fetch("POST", "https://github.com/login/oauth/access_token", Some(&token_body), None).await?;
             let access_token = token_resp["access_token"].as_str().unwrap_or("").to_string();
             if access_token.is_empty() { return json_resp(&ApiResponse::err(1002, "GitHub OAuth failed")); }
