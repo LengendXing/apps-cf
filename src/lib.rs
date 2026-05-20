@@ -28,6 +28,18 @@ struct User { id: i64, username: String, email: String, password: String, role: 
 #[derive(Serialize, Deserialize, Clone)]
 struct AuditLog { id: i64, user_id: i64, action: String, target_type: String, target_id: Option<i64>, details: String, created_at: String }
 
+#[derive(Serialize, Deserialize, Clone)]
+struct Script {
+    id: i64, tool_id: i64, name: String, content: String,
+    platform: String, tags: Vec<String>, sort_order: i64,
+}
+
+#[derive(Serialize, Deserialize, Clone)]
+struct Config {
+    id: i64, tool_id: i64, name: String, format: String,
+    content: String, sort_order: i64, copy_count: i64,
+}
+
 #[derive(Serialize, Deserialize)]
 struct AppData { categories: Vec<Category>, tools: Vec<Tool> }
 
@@ -52,6 +64,14 @@ impl ApiResponse {
     versions: Option<Vec<VersionItem>>, sort_order: Option<i64>, is_featured: Option<bool>,
 }
 #[derive(Deserialize)] struct UserInput { is_active: Option<bool>, role: Option<String> }
+#[derive(Deserialize)] struct ScriptInput {
+    tool_id: Option<i64>, name: Option<String>, content: Option<String>,
+    platform: Option<String>, tags: Option<Vec<String>>, sort_order: Option<i64>,
+}
+#[derive(Deserialize)] struct ConfigInput {
+    tool_id: Option<i64>, name: Option<String>, format: Option<String>,
+    content: Option<String>, sort_order: Option<i64>,
+}
 
 // === KV Helpers ===
 
@@ -65,6 +85,8 @@ async fn ensure_seeded(kv: &KvStore) -> Result<()> {
         password: ADMIN_PASSWORD.to_string(), role: "admin".to_string(), is_active: true,
     }])?.execute().await?;
     kv.put("audit_logs", &Vec::<AuditLog>::new())?.execute().await?;
+    kv.put("scripts", &Vec::<Script>::new())?.execute().await?;
+    kv.put("configs", &Vec::<Config>::new())?.execute().await?;
     kv.put("next_id", 1000_i64)?.execute().await?;
     kv.put("access_password", "dabendi66")?.execute().await?;
     kv.put("seeded", "1")?.execute().await?;
@@ -85,6 +107,14 @@ async fn kv_users(kv: &KvStore) -> Result<Vec<User>> {
 
 async fn kv_audit_logs(kv: &KvStore) -> Result<Vec<AuditLog>> {
     Ok(kv.get("audit_logs").json::<Vec<AuditLog>>().await?.unwrap_or_default())
+}
+
+async fn kv_scripts(kv: &KvStore) -> Result<Vec<Script>> {
+    Ok(kv.get("scripts").json::<Vec<Script>>().await?.unwrap_or_default())
+}
+
+async fn kv_configs(kv: &KvStore) -> Result<Vec<Config>> {
+    Ok(kv.get("configs").json::<Vec<Config>>().await?.unwrap_or_default())
 }
 
 async fn alloc_id(kv: &KvStore) -> Result<i64> {
@@ -473,6 +503,171 @@ async fn main(req: Request, env: Env, _ctx: Context) -> Result<Response> {
             let total = logs.len();
             let items: Vec<_> = logs.into_iter().skip((page-1)*ps).take(ps).collect();
             json_resp(&ApiResponse::ok(serde_json::json!({"items":items,"total":total,"page":page,"page_size":ps})))
+        })
+        // --- Scripts CRUD ---
+        .get_async("/api/scripts", |req, env| async move {
+            let kv = env.kv("APPS_DATA")?;
+            let params = parse_params(&req)?;
+            let mut scripts = kv_scripts(&kv).await?;
+            if let Some(tid) = params.iter().find(|(k,_)|k=="tool_id").and_then(|(_,v)|v.parse::<i64>().ok()) {
+                scripts.retain(|s|s.tool_id==tid);
+            }
+            if let Some(p) = params.iter().find(|(k,_)|k=="platform").map(|(_,v)|v.to_lowercase()) {
+                if !p.is_empty() { scripts.retain(|s|s.platform.to_lowercase()==p); }
+            }
+            json_resp(&ApiResponse::ok(serde_json::json!({"items":scripts,"total":scripts.len()})))
+        })
+        .get_async("/api/scripts/:id", |req, env| async move {
+            let kv = env.kv("APPS_DATA")?;
+            let id: i64 = path_id(&req)?;
+            let scripts = kv_scripts(&kv).await?;
+            match scripts.iter().find(|s|s.id==id).cloned() {
+                Some(s) => json_resp(&ApiResponse::ok(serde_json::to_value(&s)?)),
+                None => json_resp(&ApiResponse::err(1004, "Script not found"))
+            }
+        })
+        .post_async("/api/scripts", |mut req, env| async move {
+            let kv = env.kv("APPS_DATA")?;
+            let (uid, _) = match get_auth_user(&req, &kv).await { Ok(v) => v, Err(_) => return json_resp_auth(&ApiResponse::err(1001, "Unauthorized")) };
+            let input: ScriptInput = req.json().await?;
+            let tool_id = input.tool_id.unwrap_or(0);
+            let name = input.name.unwrap_or_default();
+            if tool_id==0 || name.is_empty() { return json_resp(&ApiResponse::err(1003, "tool_id and name are required")); }
+            let id = alloc_id(&kv).await?;
+            let script = Script {
+                id, tool_id, name, content: input.content.unwrap_or_default(),
+                platform: input.platform.unwrap_or_default(), tags: input.tags.unwrap_or_default(),
+                sort_order: input.sort_order.unwrap_or(0),
+            };
+            let mut scripts = kv_scripts(&kv).await?;
+            log_action(&kv, uid, "create", "script", Some(id), &format!("Created script: {}", script.name)).await?;
+            scripts.push(script.clone());
+            kv.put("scripts", &scripts)?.execute().await?;
+            json_resp(&ApiResponse::ok(serde_json::to_value(&script)?))
+        })
+        .put_async("/api/scripts/:id", |mut req, env| async move {
+            let kv = env.kv("APPS_DATA")?;
+            let (uid, _) = match get_auth_user(&req, &kv).await { Ok(v) => v, Err(_) => return json_resp_auth(&ApiResponse::err(1001, "Unauthorized")) };
+            let id: i64 = path_id(&req)?;
+            let input: ScriptInput = req.json().await?;
+            let mut scripts = kv_scripts(&kv).await?;
+            let result = match scripts.iter_mut().find(|s|s.id==id) {
+                Some(script) => {
+                    if let Some(t) = input.tool_id { script.tool_id = t; }
+                    if let Some(n) = input.name { script.name = n; }
+                    if let Some(c) = input.content { script.content = c; }
+                    if let Some(p) = input.platform { script.platform = p; }
+                    if let Some(t) = input.tags { script.tags = t; }
+                    if let Some(o) = input.sort_order { script.sort_order = o; }
+                    Ok(script.clone())
+                }
+                None => Err("Script not found")
+            };
+            match &result {
+                Ok(s) => { log_action(&kv, uid, "update", "script", Some(id), &format!("Updated script: {}", s.name)).await?; kv.put("scripts", &scripts)?.execute().await?; }
+                Err(_) => {}
+            }
+            match result { Ok(s) => json_resp(&ApiResponse::ok(serde_json::to_value(&s)?)), Err(msg) => json_resp(&ApiResponse::err(1004, msg)) }
+        })
+        .delete_async("/api/scripts/:id", |req, env| async move {
+            let kv = env.kv("APPS_DATA")?;
+            let (uid, _) = match get_auth_user(&req, &kv).await { Ok(v) => v, Err(_) => return json_resp_auth(&ApiResponse::err(1001, "Unauthorized")) };
+            let id: i64 = path_id(&req)?;
+            let mut scripts = kv_scripts(&kv).await?;
+            let idx = scripts.iter().position(|s|s.id==id);
+            match idx {
+                Some(i) => { let s = scripts.remove(i); log_action(&kv, uid, "delete", "script", Some(id), &format!("Deleted script: {}", s.name)).await?; kv.put("scripts", &scripts)?.execute().await?; json_resp(&ApiResponse::ok(serde_json::json!({"deleted":true}))) }
+                None => json_resp(&ApiResponse::err(1004, "Script not found"))
+            }
+        })
+        // --- Configs CRUD ---
+        .get_async("/api/configs", |req, env| async move {
+            let kv = env.kv("APPS_DATA")?;
+            let params = parse_params(&req)?;
+            let mut configs = kv_configs(&kv).await?;
+            if let Some(tid) = params.iter().find(|(k,_)|k=="tool_id").and_then(|(_,v)|v.parse::<i64>().ok()) {
+                configs.retain(|c|c.tool_id==tid);
+            }
+            if let Some(f) = params.iter().find(|(k,_)|k=="format").map(|(_,v)|v.to_lowercase()) {
+                if !f.is_empty() { configs.retain(|c|c.format.to_lowercase()==f); }
+            }
+            json_resp(&ApiResponse::ok(serde_json::json!({"items":configs,"total":configs.len()})))
+        })
+        .get_async("/api/configs/:id", |req, env| async move {
+            let kv = env.kv("APPS_DATA")?;
+            let id: i64 = path_id(&req)?;
+            let configs = kv_configs(&kv).await?;
+            match configs.iter().find(|c|c.id==id).cloned() {
+                Some(c) => json_resp(&ApiResponse::ok(serde_json::to_value(&c)?)),
+                None => json_resp(&ApiResponse::err(1004, "Config not found"))
+            }
+        })
+        .post_async("/api/configs", |mut req, env| async move {
+            let kv = env.kv("APPS_DATA")?;
+            let (uid, _) = match get_auth_user(&req, &kv).await { Ok(v) => v, Err(_) => return json_resp_auth(&ApiResponse::err(1001, "Unauthorized")) };
+            let input: ConfigInput = req.json().await?;
+            let tool_id = input.tool_id.unwrap_or(0);
+            let name = input.name.unwrap_or_default();
+            if tool_id==0 || name.is_empty() { return json_resp(&ApiResponse::err(1003, "tool_id and name are required")); }
+            let id = alloc_id(&kv).await?;
+            let config = Config {
+                id, tool_id, name, format: input.format.unwrap_or_else(||"text".to_string()),
+                content: input.content.unwrap_or_default(), sort_order: input.sort_order.unwrap_or(0),
+                copy_count: 0,
+            };
+            let mut configs = kv_configs(&kv).await?;
+            log_action(&kv, uid, "create", "config", Some(id), &format!("Created config: {}", config.name)).await?;
+            configs.push(config.clone());
+            kv.put("configs", &configs)?.execute().await?;
+            json_resp(&ApiResponse::ok(serde_json::to_value(&config)?))
+        })
+        .put_async("/api/configs/:id", |mut req, env| async move {
+            let kv = env.kv("APPS_DATA")?;
+            let (uid, _) = match get_auth_user(&req, &kv).await { Ok(v) => v, Err(_) => return json_resp_auth(&ApiResponse::err(1001, "Unauthorized")) };
+            let id: i64 = path_id(&req)?;
+            let input: ConfigInput = req.json().await?;
+            let mut configs = kv_configs(&kv).await?;
+            let result = match configs.iter_mut().find(|c|c.id==id) {
+                Some(config) => {
+                    if let Some(t) = input.tool_id { config.tool_id = t; }
+                    if let Some(n) = input.name { config.name = n; }
+                    if let Some(f) = input.format { config.format = f; }
+                    if let Some(c) = input.content { config.content = c; }
+                    if let Some(o) = input.sort_order { config.sort_order = o; }
+                    Ok(config.clone())
+                }
+                None => Err("Config not found")
+            };
+            match &result {
+                Ok(c) => { log_action(&kv, uid, "update", "config", Some(id), &format!("Updated config: {}", c.name)).await?; kv.put("configs", &configs)?.execute().await?; }
+                Err(_) => {}
+            }
+            match result { Ok(c) => json_resp(&ApiResponse::ok(serde_json::to_value(&c)?)), Err(msg) => json_resp(&ApiResponse::err(1004, msg)) }
+        })
+        .delete_async("/api/configs/:id", |req, env| async move {
+            let kv = env.kv("APPS_DATA")?;
+            let (uid, _) = match get_auth_user(&req, &kv).await { Ok(v) => v, Err(_) => return json_resp_auth(&ApiResponse::err(1001, "Unauthorized")) };
+            let id: i64 = path_id(&req)?;
+            let mut configs = kv_configs(&kv).await?;
+            let idx = configs.iter().position(|c|c.id==id);
+            match idx {
+                Some(i) => { let c = configs.remove(i); log_action(&kv, uid, "delete", "config", Some(id), &format!("Deleted config: {}", c.name)).await?; kv.put("configs", &configs)?.execute().await?; json_resp(&ApiResponse::ok(serde_json::json!({"deleted":true}))) }
+                None => json_resp(&ApiResponse::err(1004, "Config not found"))
+            }
+        })
+        .post_async("/api/configs/:id/copy", |req, env| async move {
+            let kv = env.kv("APPS_DATA")?;
+            let id: i64 = path_id(&req)?;
+            let mut configs = kv_configs(&kv).await?;
+            let result = match configs.iter_mut().find(|c|c.id==id) {
+                Some(config) => { config.copy_count += 1; Ok(config.clone()) }
+                None => Err("Config not found")
+            };
+            match &result {
+                Ok(_) => { kv.put("configs", &configs)?.execute().await?; }
+                Err(_) => {}
+            }
+            match result { Ok(c) => json_resp(&ApiResponse::ok(serde_json::json!({"copy_count":c.copy_count}))), Err(msg) => json_resp(&ApiResponse::err(1004, msg)) }
         })
         // --- SPA Fallback ---
         .get_async("/*path", |_req, _env| async move {
