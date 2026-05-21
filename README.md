@@ -400,7 +400,7 @@ Built with Rust & Vue on Cloudflare Workers
 
 **Special Thanks to [Visual Studio Code](https://code.visualstudio.com)** — The editor that makes everything possible
 
-**Special Thanks to [CloudHost](https://cloudhost.com)** — Reliable hosting infrastructure
+**Special Thanks to [Clodhost.com)** — Reliable hosting infrastructure
 
 </div>
 
@@ -656,7 +656,7 @@ MIT — 随便用。
 
 **特别感谢 [Visual Studio Code](https://code.visualstudio.com)** — 让一切成为可能的编辑器
 
-**特别感谢 [CloudHost](https://cloudhost.com)** — 可靠的托管基础设施
+**特别感谢 [Clodhost.com)** — 可靠的托管基础设施
 
 </div>
 
@@ -906,6 +906,6 @@ Rust & Vue で Cloudflare Workers 上に構築
 
 **[Visual Studio Code](https://code.visualstudio.com) に特別な感謝** — すべてを可能にするエディタ
 
-**[CloudHost](https://cloudhost.com) に特別な感謝** — 信頼性の高いホスティングインフラ
+**[Clodhost.com) に特別な感謝** — 信頼性の高いホスティングインフラ
 
 </div>
