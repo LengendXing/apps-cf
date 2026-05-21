@@ -9,16 +9,28 @@ const api = axios.create({
 
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('token')
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`
-  }
+  if (token) config.headers.Authorization = `Bearer ${token}`
   return config
 })
 
 api.interceptors.response.use(
-  (res) => res,
+  (res) => {
+    const body = res.data
+    if (body && typeof body === 'object' && 'code' in body) {
+      if (body.code === 0) {
+        res.data = body.data
+      } else {
+        const err = new Error(body.message || body.detail || 'Error')
+        err.code = body.code
+        err.response = { data: body }
+        return Promise.reject(err)
+      }
+    }
+    return res
+  },
   (err) => {
-    if (err.response?.data?.code === 1001) {
+    const body = err.response?.data
+    if (body?.code === 1001 || body?.data?.code === 1001) {
       localStorage.removeItem('token')
       router.push('/admin/login')
     }
