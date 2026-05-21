@@ -1,53 +1,69 @@
 <template>
   <MainLayout>
     <div>
-      <h2 class="text-2xl font-bold mb-8">{{ t('dashboard.title') }}</h2>
+      <h1 class="text-[28px] font-semibold tracking-tight mb-8" style="color:var(--fg)">{{ t('dashboard.title') }}</h1>
 
-      <div v-if="stats" class="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8">
-        <div class="bg-card rounded-xl border border-border p-5">
-          <p class="text-sm text-muted-foreground">{{ t('dashboard.statUsers') }}</p>
-          <p class="text-2xl font-bold mt-1">{{ stats.users }}</p>
-          <p class="text-xs text-muted-foreground mt-1">{{ stats.active_users }} {{ t('adminUsers.active') }}</p>
+      <div v-if="stats" class="grid grid-cols-3 gap-4 mb-8">
+        <div class="apple-card p-5">
+          <p class="text-xs font-medium uppercase tracking-wider mb-1" style="color:var(--fg-secondary)">{{ t('dashboard.statUsers') }}</p>
+          <p class="text-[32px] font-semibold tracking-tight" style="color:var(--fg)">{{ stats.users }}</p>
+          <p class="text-xs mt-1" style="color:var(--fg-tertiary)">{{ stats.active_users }} {{ t('adminUsers.active') }}</p>
         </div>
-        <div class="bg-card rounded-xl border border-border p-5">
-          <p class="text-sm text-muted-foreground">{{ t('dashboard.statCategories') }}</p>
-          <p class="text-2xl font-bold mt-1">{{ stats.categories }}</p>
+        <div class="apple-card p-5">
+          <p class="text-xs font-medium uppercase tracking-wider mb-1" style="color:var(--fg-secondary)">{{ t('dashboard.statCategories') }}</p>
+          <p class="text-[32px] font-semibold tracking-tight" style="color:var(--fg)">{{ stats.categories }}</p>
         </div>
-        <div class="bg-card rounded-xl border border-border p-5">
-          <p class="text-sm text-muted-foreground">{{ t('dashboard.statTools') }}</p>
-          <p class="text-2xl font-bold mt-1">{{ stats.tools }}</p>
-          <p class="text-xs text-muted-foreground mt-1">{{ stats.featured_tools }} {{ t('adminTools.featured') }}</p>
+        <div class="apple-card p-5">
+          <p class="text-xs font-medium uppercase tracking-wider mb-1" style="color:var(--fg-secondary)">{{ t('dashboard.statTools') }}</p>
+          <p class="text-[32px] font-semibold tracking-tight" style="color:var(--fg)">{{ stats.tools }}</p>
+          <p class="text-xs mt-1" style="color:var(--fg-tertiary)">{{ stats.featured_tools }} {{ t('adminTools.featured') }}</p>
         </div>
       </div>
 
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-        <router-link to="/admin/tools" class="group bg-card rounded-xl border border-border p-6 hover:bg-muted/50 transition-all cursor-pointer">
-          <h3 class="text-lg font-semibold">{{ t('dashboard.tools') }}</h3>
-          <p class="text-sm text-muted-foreground mt-1">{{ t('dashboard.toolsDesc') }}</p>
+      <div class="grid grid-cols-2 gap-4 mb-6">
+        <router-link to="/admin/tools" class="apple-card p-6 flex items-start gap-4 hover:shadow-apple-md transition-shadow cursor-pointer group">
+          <div class="w-10 h-10 rounded-apple flex items-center justify-center flex-shrink-0" style="background:rgba(0,125,255,0.1)">
+            <span class="text-lg">🔧</span>
+          </div>
+          <div>
+            <h3 class="text-[15px] font-semibold mb-0.5" style="color:var(--fg)">{{ t('dashboard.tools') }}</h3>
+            <p class="text-xs" style="color:var(--fg-secondary)">{{ t('dashboard.toolsDesc') }}</p>
+          </div>
         </router-link>
-        <div class="bg-card rounded-xl border border-border p-6 hover:bg-muted/50 transition-all">
-          <h3 class="text-lg font-semibold">{{ t('dashboard.settings') }}</h3>
-          <p class="text-sm text-muted-foreground mt-1">{{ t('dashboard.settingsDesc') }}</p>
-          <div class="mt-4">
-            <label class="text-xs text-muted-foreground block mb-1">{{ t('dashboard.accessPassword') }}</label>
+        <router-link to="/admin/users" class="apple-card p-6 flex items-start gap-4 hover:shadow-apple-md transition-shadow cursor-pointer">
+          <div class="w-10 h-10 rounded-apple flex items-center justify-center flex-shrink-0" style="background:rgba(52,199,89,0.1)">
+            <span class="text-lg">👥</span>
+          </div>
+          <div>
+            <h3 class="text-[15px] font-semibold mb-0.5" style="color:var(--fg)">{{ t('dashboard.users') }}</h3>
+            <p class="text-xs" style="color:var(--fg-secondary)">{{ t('dashboard.usersDesc') }}</p>
+          </div>
+        </router-link>
+      </div>
+
+      <div class="grid grid-cols-2 gap-4 mb-6">
+        <router-link to="/admin/audit" class="apple-card p-6 flex items-start gap-4 hover:shadow-apple-md transition-shadow cursor-pointer">
+          <div class="w-10 h-10 rounded-apple flex items-center justify-center flex-shrink-0" style="background:rgba(175,82,222,0.1)">
+            <span class="text-lg">📋</span>
+          </div>
+          <div>
+            <h3 class="text-[15px] font-semibold mb-0.5" style="color:var(--fg)">{{ t('dashboard.audit') }}</h3>
+            <p class="text-xs" style="color:var(--fg-secondary)">{{ t('dashboard.auditDesc') }}</p>
+          </div>
+        </router-link>
+        <div class="apple-card p-6 flex items-start gap-4">
+          <div class="w-10 h-10 rounded-apple flex items-center justify-center flex-shrink-0" style="background:rgba(255,149,0,0.1)">
+            <span class="text-lg">🔑</span>
+          </div>
+          <div class="flex-1 min-w-0">
+            <h3 class="text-[15px] font-semibold mb-2" style="color:var(--fg)">{{ t('dashboard.accessPassword') }}</h3>
             <div class="flex gap-2">
-              <input v-model="newPwd" type="password" :placeholder="t('dashboard.accessPasswordPlaceholder')" class="flex-1 px-3 py-1.5 text-sm rounded-md border border-border bg-background focus:outline-none focus:ring-1 focus:ring-primary" />
-              <button @click="updatePassword" class="px-3 py-1.5 text-sm bg-primary text-primary-foreground rounded-md hover:opacity-90 transition">{{ t('dashboard.update') }}</button>
+              <input v-model="newPwd" type="password" :placeholder="t('dashboard.accessPasswordPlaceholder')" class="apple-input flex-1" />
+              <button @click="updatePassword" class="apple-btn text-xs">{{ t('dashboard.update') }}</button>
             </div>
-            <p v-if="pwdMsg" :class="pwdOk ? 'text-green-500' : 'text-red-500'" class="text-xs mt-1">{{ pwdMsg }}</p>
+            <p v-if="pwdMsg" :class="pwdOk ? 'text-apple-green' : 'text-apple-red'" class="text-xs mt-1.5">{{ pwdMsg }}</p>
           </div>
         </div>
-      </div>
-
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <router-link to="/admin/users" class="bg-card rounded-xl border border-border p-6 hover:bg-muted/50 transition-all cursor-pointer">
-          <h3 class="text-lg font-semibold">{{ t('dashboard.users') }}</h3>
-          <p class="text-sm text-muted-foreground mt-1">{{ t('dashboard.usersDesc') }}</p>
-        </router-link>
-        <router-link to="/admin/audit" class="bg-card rounded-xl border border-border p-6 hover:bg-muted/50 transition-all cursor-pointer">
-          <h3 class="text-lg font-semibold">{{ t('dashboard.audit') }}</h3>
-          <p class="text-sm text-muted-foreground mt-1">{{ t('dashboard.auditDesc') }}</p>
-        </router-link>
       </div>
     </div>
   </MainLayout>
@@ -66,10 +82,7 @@ const pwdMsg = ref('')
 const pwdOk = ref(false)
 
 onMounted(async () => {
-  try {
-    const res = await statsApi.get()
-    stats.value = res.data
-  } catch {}
+  try { const res = await statsApi.get(); stats.value = res.data } catch {}
 })
 
 async function updatePassword() {

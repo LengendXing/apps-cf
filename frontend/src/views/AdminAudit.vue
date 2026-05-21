@@ -1,50 +1,38 @@
 <template>
   <MainLayout>
     <div>
-      <h2 class="text-2xl font-bold mb-6">{{ t('adminAudit.title') }}</h2>
+      <h1 class="text-[28px] font-semibold tracking-tight mb-6" style="color:var(--fg)">{{ t('adminAudit.title') }}</h1>
       <div class="flex gap-3 mb-4">
-        <select v-model="actionFilter" @change="page = 1; fetch()" class="px-3 py-1.5 text-sm rounded-md border border-border bg-background">
+        <select v-model="actionFilter" @change="page=1;fetch()" class="apple-select">
           <option value="">{{ t('adminAudit.filterAction') }}: {{ t('adminAudit.all') }}</option>
-          <option value="create">create</option>
-          <option value="update">update</option>
-          <option value="delete">delete</option>
+          <option value="create">create</option><option value="update">update</option><option value="delete">delete</option>
         </select>
-        <select v-model="typeFilter" @change="page = 1; fetch()" class="px-3 py-1.5 text-sm rounded-md border border-border bg-background">
+        <select v-model="typeFilter" @change="page=1;fetch()" class="apple-select">
           <option value="">{{ t('adminAudit.filterType') }}: {{ t('adminAudit.all') }}</option>
-          <option value="category">category</option>
-          <option value="tool">tool</option>
+          <option value="category">category</option><option value="tool">tool</option>
         </select>
       </div>
-      <div class="bg-card rounded-lg border border-border overflow-hidden">
-        <table class="w-full text-sm">
-          <thead class="border-b border-border">
-            <tr>
-              <th class="px-4 py-3 text-left font-medium text-muted-foreground">ID</th>
-              <th class="px-4 py-3 text-left font-medium text-muted-foreground">{{ t('adminAudit.userId') }}</th>
-              <th class="px-4 py-3 text-left font-medium text-muted-foreground">{{ t('adminAudit.action') }}</th>
-              <th class="px-4 py-3 text-left font-medium text-muted-foreground">{{ t('adminAudit.targetType') }}</th>
-              <th class="px-4 py-3 text-left font-medium text-muted-foreground">{{ t('adminAudit.targetId') }}</th>
-              <th class="px-4 py-3 text-left font-medium text-muted-foreground">{{ t('adminAudit.details') }}</th>
-              <th class="px-4 py-3 text-left font-medium text-muted-foreground">{{ t('adminAudit.time') }}</th>
-            </tr>
+      <div class="apple-card overflow-hidden">
+        <table class="apple-table">
+          <thead>
+            <tr><th>ID</th><th>{{ t('adminAudit.userId') }}</th><th>{{ t('adminAudit.action') }}</th><th>{{ t('adminAudit.targetType') }}</th><th>{{ t('adminAudit.targetId') }}</th><th>{{ t('adminAudit.details') }}</th><th>{{ t('adminAudit.time') }}</th></tr>
           </thead>
           <tbody>
-            <tr v-for="log in logs" :key="log.id" class="border-b border-border last:border-0">
-              <td class="px-4 py-3 text-muted-foreground">{{ log.id }}</td>
-              <td class="px-4 py-3">{{ log.user_id }}</td>
-              <td class="px-4 py-3">
-                <span :class="actionColor(log.action)">{{ log.action }}</span>
-              </td>
-              <td class="px-4 py-3 text-muted-foreground">{{ log.target_type }}</td>
-              <td class="px-4 py-3 text-muted-foreground">{{ log.target_id || '-' }}</td>
-              <td class="px-4 py-3 text-muted-foreground max-w-xs truncate">{{ parseDetails(log.details) }}</td>
-              <td class="px-4 py-3 text-muted-foreground whitespace-nowrap">{{ log.created_at }}</td>
+            <tr v-for="log in logs" :key="log.id">
+              <td style="color:var(--fg-tertiary)">{{ log.id }}</td>
+              <td style="color:var(--fg)">{{ log.user_id }}</td>
+              <td><span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium" :style="actionStyle(log.action)">{{ log.action }}</span></td>
+              <td style="color:var(--fg-secondary)">{{ log.target_type }}</td>
+              <td style="color:var(--fg-tertiary)">{{ log.target_id || '-' }}</td>
+              <td style="color:var(--fg-secondary)" class="max-w-xs truncate">{{ parseDetails(log.details) }}</td>
+              <td style="color:var(--fg-tertiary)" class="whitespace-nowrap">{{ log.created_at }}</td>
             </tr>
+            <tr v-if="!logs.length"><td colspan="7" class="text-center py-12 text-sm" style="color:var(--fg-tertiary)">No logs</td></tr>
           </tbody>
         </table>
       </div>
-      <div v-if="totalPages > 1" class="flex items-center justify-center gap-2 mt-4">
-        <button v-for="p in totalPages" :key="p" @click="page = p; fetch()" :class="p === page ? 'bg-primary text-primary-foreground' : 'border border-border'" class="px-3 py-1 text-sm rounded-md">{{ p }}</button>
+      <div v-if="totalPages>1" class="flex items-center justify-center gap-1.5 mt-6">
+        <button v-for="p in totalPages" :key="p" @click="page=p;fetch()" class="w-8 h-8 rounded-lg text-xs font-medium transition-colors" :style="p===page?'background:var(--accent);color:#fff':'color:var(--fg-secondary)'">{{ p }}</button>
       </div>
     </div>
   </MainLayout>
@@ -78,17 +66,12 @@ async function fetch() {
   } catch {}
 }
 
-function actionColor(action) {
-  if (action === 'delete') return 'text-red-400'
-  if (action === 'create') return 'text-green-500'
-  if (action === 'update') return 'text-blue-400'
-  return 'text-muted-foreground'
+function actionStyle(action) {
+  if (action === 'delete') return 'background:rgba(255,59,48,0.1);color:#FF3B30'
+  if (action === 'create') return 'background:rgba(52,199,89,0.1);color:#34C759'
+  if (action === 'update') return 'background:rgba(0,125,255,0.1);color:var(--accent)'
+  return 'background:var(--bg-sidebar-hover);color:var(--fg-secondary)'
 }
 
-function parseDetails(d) {
-  try {
-    const obj = JSON.parse(d)
-    return Object.entries(obj).map(([k, v]) => `${k}: ${v}`).join(', ')
-  } catch { return d }
-}
+function parseDetails(d) { try { return Object.entries(JSON.parse(d)).map(([k,v])=>`${k}: ${v}`).join(', ') } catch { return d } }
 </script>

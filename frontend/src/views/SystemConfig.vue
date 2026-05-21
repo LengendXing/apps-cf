@@ -1,38 +1,27 @@
 <template>
   <MainLayout>
-    <h2 class="text-xl font-bold mb-6">{{ t('systemConfig.title') }}</h2>
-    <div class="bg-card rounded-xl border border-border p-6 max-w-xl">
-      <div class="mb-6">
-        <label class="text-sm font-medium block mb-2">{{ t('systemConfig.menuLayout') }}</label>
+    <div>
+      <h1 class="text-[28px] font-semibold tracking-tight mb-6" style="color:var(--fg)">{{ t('systemConfig.title') }}</h1>
+      <div class="apple-card p-6 max-w-xl">
+        <label class="text-[13px] font-medium block mb-3" style="color:var(--fg)">{{ t('systemConfig.menuLayout') }}</label>
         <div class="flex gap-3">
-          <button @click="save('left')" :class="layout === 'left' ? 'border-primary bg-primary/5 ring-1 ring-primary' : 'border-border hover:bg-muted'" class="flex-1 p-4 rounded-xl border transition text-center">
+          <button @click="save('left')" class="flex-1 p-4 rounded-apple-lg transition-all" :style="layout==='left'?'background:var(--accent);color:#fff;box-shadow:0 4px 12px rgba(0,125,255,0.3)':'background:var(--bg-sidebar-hover);color:var(--fg-secondary)'">
             <div class="flex gap-2 mb-2 justify-center">
-              <div class="w-8 h-16 bg-muted rounded" />
-              <div class="flex-1 space-y-1">
-                <div class="h-2 bg-muted rounded w-full" />
-                <div class="h-2 bg-muted rounded w-3/4" />
-                <div class="h-2 bg-muted rounded w-1/2" />
-              </div>
+              <div class="w-6 h-12 rounded opacity-40" :style="layout==='left'?'background:rgba(255,255,255,0.3)':'background:var(--divider)'" />
+              <div class="flex-1 space-y-1.5"><div class="h-1.5 rounded" :style="layout==='left'?'background:rgba(255,255,255,0.3)':'background:var(--divider)'" /><div class="h-1.5 rounded w-3/4" :style="layout==='left'?'background:rgba(255,255,255,0.3)':'background:var(--divider)'" /><div class="h-1.5 rounded w-1/2" :style="layout==='left'?'background:rgba(255,255,255,0.2)':'background:var(--divider)'" /></div>
             </div>
-            <span class="text-xs text-muted-foreground">{{ t('systemConfig.layoutLeft') }}</span>
+            <span class="text-xs font-medium">{{ t('systemConfig.layoutLeft') }}</span>
           </button>
-          <button @click="save('top')" :class="layout === 'top' ? 'border-primary bg-primary/5 ring-1 ring-primary' : 'border-border hover:bg-muted'" class="flex-1 p-4 rounded-xl border transition text-center">
+          <button @click="save('top')" class="flex-1 p-4 rounded-apple-lg transition-all" :style="layout==='top'?'background:var(--accent);color:#fff;box-shadow:0 4px 12px rgba(0,125,255,0.3)':'background:var(--bg-sidebar-hover);color:var(--fg-secondary)'">
             <div class="space-y-2 mb-2">
-              <div class="flex gap-1 justify-center">
-                <div class="h-2 w-10 bg-muted rounded" />
-                <div class="h-2 w-10 bg-muted rounded" />
-                <div class="h-2 w-10 bg-muted rounded" />
-              </div>
-              <div class="space-y-1">
-                <div class="h-2 bg-muted rounded w-full" />
-                <div class="h-2 bg-muted rounded w-3/4" />
-              </div>
+              <div class="flex gap-1 justify-center"><div class="h-1.5 w-8 rounded" :style="layout==='top'?'background:rgba(255,255,255,0.3)':'background:var(--divider)'" /><div class="h-1.5 w-8 rounded" :style="layout==='top'?'background:rgba(255,255,255,0.3)':'background:var(--divider)'" /><div class="h-1.5 w-8 rounded" :style="layout==='top'?'background:rgba(255,255,255,0.3)':'background:var(--divider)'" /></div>
+              <div class="space-y-1.5"><div class="h-1.5 rounded" :style="layout==='top'?'background:rgba(255,255,255,0.3)':'background:var(--divider)'" /><div class="h-1.5 rounded w-3/4" :style="layout==='top'?'background:rgba(255,255,255,0.2)':'background:var(--divider)'" /></div>
             </div>
-            <span class="text-xs text-muted-foreground">{{ t('systemConfig.layoutTop') }}</span>
+            <span class="text-xs font-medium">{{ t('systemConfig.layoutTop') }}</span>
           </button>
         </div>
+        <p v-if="msg" :class="ok?'text-apple-green':'text-apple-red'" class="text-xs mt-3">{{ msg }}</p>
       </div>
-      <p v-if="msg" :class="ok ? 'text-green-500' : 'text-red-500'" class="text-xs">{{ msg }}</p>
     </div>
   </MainLayout>
 </template>
@@ -48,24 +37,10 @@ const layout = ref('left')
 const msg = ref('')
 const ok = ref(false)
 
-onMounted(async () => {
-  try {
-    const res = await systemConfigApi.get()
-    layout.value = res.data?.layout || 'left'
-  } catch {}
-})
+onMounted(async () => { try { const res = await systemConfigApi.get(); layout.value = res.data?.layout || 'left' } catch {} })
 
 async function save(val) {
-  layout.value = val
-  msg.value = ''
-  try {
-    await systemConfigApi.update({ layout: val })
-    msg.value = t('systemConfig.saved')
-    ok.value = true
-    localStorage.setItem('system_layout', val)
-  } catch (e) {
-    msg.value = e.response?.data?.message || t('systemConfig.saveFailed')
-    ok.value = false
-  }
+  layout.value = val; msg.value = ''
+  try { await systemConfigApi.update({ layout: val }); msg.value = t('systemConfig.saved'); ok.value = true; localStorage.setItem('system_layout', val) } catch (e) { msg.value = e.response?.data?.message || t('systemConfig.saveFailed'); ok.value = false }
 }
 </script>
