@@ -604,7 +604,7 @@ async fn main(req: Request, env: Env, _ctx: Context) -> Result<Response> {
             };
             let token = make_jwt(&format!(r#"{{"username":"{}","role":"admin"}}"#, gh_login));
             let app_url = env.var("APP_URL")?.to_string();
-            build_resp(None, 302, &[("Location",&format!("{}/admin?token={}", app_url, token)),("Access-Control-Allow-Origin","*")])
+            build_resp(None, 302, &[("Location",&format!("{}/admin/login?token={}", app_url, token)),("Access-Control-Allow-Origin","*")])
         })
         // --- Audit Logs ---
         .get_async("/api/audit-logs", |req, env| async move {
