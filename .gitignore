@@ -1,1 +1,2 @@
 node_modules/\ntarget/\n.wrangler/\nbuild/\nfrontend/node_modules/
+.wrangler/

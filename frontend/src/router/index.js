@@ -38,6 +38,11 @@ const routes = [
     component: () => import('../views/AdminAudit.vue'),
     meta: { auth: true },
   },
+  {
+    path: '/admin/notes',
+    component: () => import('../views/AdminNotes.vue'),
+    meta: { auth: true },
+  },
 ]
 
 const router = createRouter({

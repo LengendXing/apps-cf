@@ -30,6 +30,9 @@
           </tbody>
         </table>
       </div>
+      <div v-if="totalPages>1" class="flex items-center justify-center gap-1.5 mt-4">
+        <button v-for="p in totalPages" :key="p" @click="page=p;fetch()" class="w-8 h-8 rounded-lg text-xs font-medium transition-colors" :style="p===page?'background:var(--accent);color:#fff':'color:var(--fg-secondary)'">{{ p }}</button>
+      </div>
 
       <!-- Apple-style Modal -->
       <Transition name="modal">
@@ -68,12 +71,16 @@ const search = ref('')
 const showModal = ref(false)
 const editing = ref(null)
 const form = ref({ name: '', format: 'text', content: '' })
+const page = ref(1)
+const total = ref(0)
+const pageSize = 20
+const totalPages = computed(() => Math.ceil(total.value / pageSize))
 
 const filtered = computed(() => { if (!search.value) return configs.value; const q = search.value.toLowerCase(); return configs.value.filter(c => c.name.toLowerCase().includes(q)) })
 
 onMounted(fetch)
 
-async function fetch() { try { const res = await configApi.list(); configs.value = res.data?.items || [] } catch {} }
+async function fetch() { try { const res = await configApi.list({ page: page.value, page_size: pageSize }); configs.value = res.data?.items || []; total.value = res.data?.total || 0 } catch {} }
 
 function editConfig(c) { editing.value = c || null; form.value = c ? { name: c.name, format: c.format, content: c.content } : { name: '', format: 'text', content: '' }; showModal.value = true }
 

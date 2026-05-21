@@ -67,7 +67,7 @@
       "name": "Go",
       "description": "Go programming language compiler and runtime. Statically typed, compiled language designed for simplicity and concurrency.",
       "url": "https://go.dev/dl/",
-      "icon": "https://cdn.simpleicons.org/go/007AFF",
+      "icon": "https://cdn.simpleicons.org/go",
       "category_id": 1,
       "tags": [
         "compiler",
@@ -97,7 +97,7 @@
       "name": "Rust",
       "description": "Rust programming language. Empowering everyone to build reliable and efficient software with memory safety.",
       "url": "https://www.rust-lang.org/tools/install",
-      "icon": "https://cdn.simpleicons.org/rust/007AFF",
+      "icon": "https://cdn.simpleicons.org/rust",
       "category_id": 2,
       "tags": [
         "compiler",
@@ -123,7 +123,7 @@
       "name": "JDK",
       "description": "Java Development Kit. Official Oracle JDK with compiler, runtime, and development tools for Java SE.",
       "url": "https://www.oracle.com/java/technologies/downloads/",
-      "icon": "https://cdn.simpleicons.org/openjdk/007AFF",
+      "icon": "https://cdn.simpleicons.org/openjdk",
       "category_id": 3,
       "tags": [
         "jdk",
@@ -153,7 +153,7 @@
       "name": "Flutter SDK",
       "description": "Google UI toolkit for building natively compiled apps for mobile, web, and desktop from a single codebase.",
       "url": "https://docs.flutter.dev/get-started/install",
-      "icon": "https://cdn.simpleicons.org/flutter/007AFF",
+      "icon": "https://cdn.simpleicons.org/flutter",
       "category_id": 4,
       "tags": [
         "sdk",
@@ -179,7 +179,7 @@
       "name": "Vue.js",
       "description": "The Progressive JavaScript Framework. Approachable, performant, and versatile for building web UIs.",
       "url": "https://github.com/vuejs/core/releases",
-      "icon": "https://cdn.simpleicons.org/vuedotjs/007AFF",
+      "icon": "https://cdn.simpleicons.org/vuedotjs",
       "category_id": 5,
       "tags": [
         "framework",
@@ -205,7 +205,7 @@
       "name": "React",
       "description": "Library for web and native user interfaces. Component-based with declarative rendering and virtual DOM.",
       "url": "https://github.com/facebook/react/releases",
-      "icon": "https://cdn.simpleicons.org/react/007AFF",
+      "icon": "https://cdn.simpleicons.org/react",
       "category_id": 6,
       "tags": [
         "library",
@@ -231,7 +231,7 @@
       "name": "Python",
       "description": "General-purpose, high-level programming language. Emphasizes readability with dynamic typing.",
       "url": "https://www.python.org/downloads/",
-      "icon": "https://cdn.simpleicons.org/python/007AFF",
+      "icon": "https://cdn.simpleicons.org/python",
       "category_id": 7,
       "tags": [
         "language",
@@ -261,7 +261,7 @@
       "name": "PHP",
       "description": "Server-side scripting language for web development. Powers 77% of websites with known server-side languages.",
       "url": "https://www.php.net/downloads",
-      "icon": "https://cdn.simpleicons.org/php/007AFF",
+      "icon": "https://cdn.simpleicons.org/php",
       "category_id": 8,
       "tags": [
         "language",
@@ -291,7 +291,7 @@
       "name": "GCC",
       "description": "GNU Compiler Collection. Free, industry-standard C++ compiler supporting C++23 features.",
       "url": "https://gcc.gnu.org/install/download.html",
-      "icon": "https://cdn.simpleicons.org/gcc/007AFF",
+      "icon": "https://cdn.simpleicons.org/gcc",
       "category_id": 9,
       "tags": [
         "compiler",
@@ -317,7 +317,7 @@
       "name": ".NET SDK",
       "description": "Microsoft .NET development kit. C# runtime, SDK, and ASP.NET for web, desktop, mobile, cloud.",
       "url": "https://dotnet.microsoft.com/download",
-      "icon": "https://cdn.simpleicons.org/dotnet/007AFF",
+      "icon": "https://cdn.simpleicons.org/dotnet",
       "category_id": 10,
       "tags": [
         "sdk",
@@ -347,7 +347,7 @@
       "name": "Actix Web",
       "description": "Powerful, pragmatic, extremely fast web framework for Rust. Built on the Actix actor system.",
       "url": "https://github.com/actix/actix-web/releases",
-      "icon": "https://cdn.simpleicons.org/actix/007AFF",
+      "icon": "https://cdn.simpleicons.org/actix",
       "category_id": 2,
       "tags": [
         "web",
@@ -373,7 +373,7 @@
       "name": "Spring Boot",
       "description": "Create stand-alone, production-grade Spring applications with minimal configuration.",
       "url": "https://github.com/spring-projects/spring-boot/releases",
-      "icon": "https://cdn.simpleicons.org/springboot/007AFF",
+      "icon": "https://cdn.simpleicons.org/springboot",
       "category_id": 3,
       "tags": [
         "web",
@@ -399,7 +399,7 @@
       "name": "Nuxt",
       "description": "The Intuitive Vue Framework. Full-stack web apps with SSR, auto-imports, and file-based routing.",
       "url": "https://github.com/nuxt/nuxt/releases",
-      "icon": "https://cdn.simpleicons.org/nuxtdotjs/007AFF",
+      "icon": "https://cdn.simpleicons.org/nuxtdotjs",
       "category_id": 5,
       "tags": [
         "ssr",
@@ -425,7 +425,7 @@
       "name": "Next.js",
       "description": "The React Framework for the Web. SSR, static generation, API routes, and edge runtime.",
       "url": "https://github.com/vercel/next.js/releases",
-      "icon": "https://cdn.simpleicons.org/nextdotjs/007AFF",
+      "icon": "https://cdn.simpleicons.org/nextdotjs",
       "category_id": 6,
       "tags": [
         "ssr",
@@ -451,7 +451,7 @@
       "name": "FastAPI",
       "description": "Modern, fast web framework for APIs with Python 3.12+. Auto OpenAPI docs from type hints.",
       "url": "https://github.com/fastapi/fastapi/releases",
-      "icon": "https://cdn.simpleicons.org/fastapi/007AFF",
+      "icon": "https://cdn.simpleicons.org/fastapi",
       "category_id": 7,
       "tags": [
         "web",
@@ -477,7 +477,7 @@
       "name": "Laravel",
       "description": "Elegant PHP web framework with expressive syntax. MVC with ORM, queue, events, and artisan CLI.",
       "url": "https://github.com/laravel/laravel/releases",
-      "icon": "https://cdn.simpleicons.org/laravel/007AFF",
+      "icon": "https://cdn.simpleicons.org/laravel",
       "category_id": 8,
       "tags": [
         "framework",
@@ -503,7 +503,7 @@
       "name": "Clang/LLVM",
       "description": "C/C++/ObjC compiler and toolchain. Modular, high-quality with great diagnostics.",
       "url": "https://github.com/llvm/llvm-project/releases",
-      "icon": "https://cdn.simpleicons.org/llvm/007AFF",
+      "icon": "https://cdn.simpleicons.org/llvm",
       "category_id": 9,
       "tags": [
         "compiler",
@@ -529,7 +529,7 @@
       "name": "Visual Studio",
       "description": "Microsoft IDE. Best-in-class C# debugger, IntelliSense, and Azure tooling.",
       "url": "https://visualstudio.microsoft.com/downloads/",
-      "icon": "https://cdn.simpleicons.org/visualstudio/007AFF",
+      "icon": "https://cdn.simpleicons.org/visualstudio",
       "category_id": 10,
       "tags": [
         "ide",
@@ -554,7 +554,7 @@
       "name": "Axum",
       "description": "Ergonomic and modular web framework built with Tokio, Tower, and Hyper. Official Tokio team project.",
       "url": "https://github.com/tokio-rs/axum/releases",
-      "icon": "https://cdn.simpleicons.org/rust/007AFF",
+      "icon": "https://cdn.simpleicons.org/rust",
       "category_id": 2,
       "tags": [
         "web",
@@ -580,7 +580,7 @@
       "name": "Android Studio",
       "description": "Official IDE for Android and Flutter development. Includes emulator, layout editor, and APK analyzer.",
       "url": "https://developer.android.com/studio",
-      "icon": "https://cdn.simpleicons.org/androidstudio/007AFF",
+      "icon": "https://cdn.simpleicons.org/androidstudio",
       "category_id": 4,
       "tags": [
         "ide",
@@ -606,7 +606,7 @@
       "name": "Django",
       "description": "High-level Python web framework. Batteries-included with ORM, admin, auth, and security.",
       "url": "https://github.com/django/django/releases",
-      "icon": "https://cdn.simpleicons.org/django/007AFF",
+      "icon": "https://cdn.simpleicons.org/django",
       "category_id": 7,
       "tags": [
         "web",
@@ -632,7 +632,7 @@
       "name": "Rider",
       "description": "Fast C# IDE by JetBrains. Cross-platform .NET development with Unity support.",
       "url": "https://www.jetbrains.com/rider/download/",
-      "icon": "https://cdn.simpleicons.org/rider/007AFF",
+      "icon": "https://cdn.simpleicons.org/rider",
       "category_id": 10,
       "tags": [
         "ide",
@@ -658,7 +658,7 @@
       "name": "Hugo",
       "description": "Static site generator written in Go. The world's fastest framework for building websites.",
       "url": "https://github.com/gohugoio/hugo/releases",
-      "icon": "https://cdn.simpleicons.org/hugo/007AFF",
+      "icon": "https://cdn.simpleicons.org/hugo",
       "category_id": 1,
       "tags": [
         "ssg",
@@ -684,7 +684,7 @@
       "name": "Tauri",
       "description": "Build smaller, faster, more secure desktop and mobile apps with a web frontend. Rust-powered Electron alternative.",
       "url": "https://github.com/tauri-apps/tauri/releases",
-      "icon": "https://cdn.simpleicons.org/tauri/007AFF",
+      "icon": "https://cdn.simpleicons.org/tauri",
       "category_id": 2,
       "tags": [
         "desktop",
@@ -710,7 +710,7 @@
       "name": "IntelliJ IDEA",
       "description": "Capable and ergonomic Java IDE by JetBrains. Industry-standard for Java/Kotlin development.",
       "url": "https://www.jetbrains.com/idea/download/",
-      "icon": "https://cdn.simpleicons.org/intellijidea/007AFF",
+      "icon": "https://cdn.simpleicons.org/intellijidea",
       "category_id": 3,
       "tags": [
         "ide",
@@ -736,7 +736,7 @@
       "name": "Vite",
       "description": "Next-gen frontend build tool. Lightning-fast HMR, on-demand compilation, rich plugin ecosystem.",
       "url": "https://github.com/vitejs/vite/releases",
-      "icon": "https://cdn.simpleicons.org/vite/007AFF",
+      "icon": "https://cdn.simpleicons.org/vite",
       "category_id": 5,
       "tags": [
         "build",
@@ -762,7 +762,7 @@
       "name": "PyCharm",
       "description": "Python IDE by JetBrains. Intelligent code completion, analysis, and integrated tools.",
       "url": "https://www.jetbrains.com/pycharm/download/",
-      "icon": "https://cdn.simpleicons.org/pycharm/007AFF",
+      "icon": "https://cdn.simpleicons.org/pycharm",
       "category_id": 7,
       "tags": [
         "ide",
@@ -788,7 +788,7 @@
       "name": "Qt",
       "description": "Cross-platform GUI framework. Signals/slots, MVC, OpenGL, and Qt Creator IDE.",
       "url": "https://download.qt.io/official_releases/qt/",
-      "icon": "https://cdn.simpleicons.org/qt/007AFF",
+      "icon": "https://cdn.simpleicons.org/qt",
       "category_id": 9,
       "tags": [
         "gui",
@@ -814,7 +814,7 @@
       "name": "CLion",
       "description": "C/C++ IDE by JetBrains. Smart editor, CMake support, debugger, and profiling.",
       "url": "https://www.jetbrains.com/clion/download/",
-      "icon": "https://cdn.simpleicons.org/clion/007AFF",
+      "icon": "https://cdn.simpleicons.org/clion",
       "category_id": 9,
       "tags": [
         "ide",
@@ -840,7 +840,7 @@
       "name": "PhpStorm",
       "description": "PHP IDE by JetBrains. Deep code understanding, refactoring, and built-in tools.",
       "url": "https://www.jetbrains.com/phpstorm/download/",
-      "icon": "https://cdn.simpleicons.org/phpstorm/007AFF",
+      "icon": "https://cdn.simpleicons.org/phpstorm",
       "category_id": 8,
       "tags": [
         "ide",
@@ -866,7 +866,7 @@
       "name": "Gin",
       "description": "HTTP web framework written in Go. Martini-like API with much better performance, up to 40x faster.",
       "url": "https://github.com/gin-gonic/gin/releases",
-      "icon": "https://cdn.simpleicons.org/gin/007AFF",
+      "icon": "https://cdn.simpleicons.org/gin",
       "category_id": 1,
       "tags": [
         "web",
@@ -892,7 +892,7 @@
       "name": "Dart SDK",
       "description": "Dart programming language SDK. Client-optimized language for fast apps on any platform.",
       "url": "https://github.com/dart-lang/sdk/releases",
-      "icon": "https://cdn.simpleicons.org/dart/007AFF",
+      "icon": "https://cdn.simpleicons.org/dart",
       "category_id": 4,
       "tags": [
         "language",
@@ -918,7 +918,7 @@
       "name": "Echo",
       "description": "High performance, minimalist Go web framework. Simple, scalable and fast.",
       "url": "https://github.com/labstack/echo/releases",
-      "icon": "https://cdn.simpleicons.org/echo/007AFF",
+      "icon": "https://cdn.simpleicons.org/echo",
       "category_id": 1,
       "tags": [
         "web",
@@ -944,7 +944,7 @@
       "name": "Quarkus",
       "description": "Supersonic Subatomic Java. Kubernetes-native framework with fast boot time and low memory footprint.",
       "url": "https://github.com/quarkusio/quarkus/releases",
-      "icon": "https://cdn.simpleicons.org/quarkus/007AFF",
+      "icon": "https://cdn.simpleicons.org/quarkus",
       "category_id": 3,
       "tags": [
         "cloud-native",
@@ -970,7 +970,7 @@
       "name": "Vuetify",
       "description": "Material Design component framework for Vue. 800+ pre-made components with accessibility.",
       "url": "https://github.com/vuetifyjs/vuetify/releases",
-      "icon": "https://cdn.simpleicons.org/vuetify/007AFF",
+      "icon": "https://cdn.simpleicons.org/vuetify",
       "category_id": 5,
       "tags": [
         "material",
@@ -996,7 +996,7 @@
       "name": "Remix",
       "description": "Full-stack web framework for React. Nested routing, progressive enhancement, server-first.",
       "url": "https://github.com/remix-run/remix/releases",
-      "icon": "https://cdn.simpleicons.org/remix/007AFF",
+      "icon": "https://cdn.simpleicons.org/remix",
       "category_id": 6,
       "tags": [
         "full-stack",
@@ -1022,7 +1022,7 @@
       "name": "Symfony",
       "description": "Enterprise PHP framework and reusable components. Flexible, scalable foundation for PHP projects.",
       "url": "https://github.com/symfony/symfony/releases",
-      "icon": "https://cdn.simpleicons.org/symfony/007AFF",
+      "icon": "https://cdn.simpleicons.org/symfony",
       "category_id": 8,
       "tags": [
         "framework",
@@ -1048,7 +1048,7 @@
       "name": "CMake",
       "description": "Cross-platform build system generator. Platform and compiler independence.",
       "url": "https://github.com/Kitware/CMake/releases",
-      "icon": "https://cdn.simpleicons.org/cmake/007AFF",
+      "icon": "https://cdn.simpleicons.org/cmake",
       "category_id": 9,
       "tags": [
         "build",
@@ -1074,7 +1074,7 @@
       "name": "GORM",
       "description": "The fantastic ORM library for Go. Full-featured with associations, hooks, migrations.",
       "url": "https://github.com/go-gorm/gorm/releases",
-      "icon": "https://cdn.simpleicons.org/go/007AFF",
+      "icon": "https://cdn.simpleicons.org/go",
       "category_id": 1,
       "tags": [
         "orm",
@@ -1100,7 +1100,7 @@
       "name": "Rocket",
       "description": "Web framework for Rust with focus on usability, security, and extensibility. Declarative routing via macros.",
       "url": "https://github.com/SergioBenitez/Rocket/releases",
-      "icon": "https://cdn.simpleicons.org/rust/007AFF",
+      "icon": "https://cdn.simpleicons.org/rust",
       "category_id": 2,
       "tags": [
         "web",
@@ -1125,7 +1125,7 @@
       "name": "Gradle",
       "description": "Build automation tool for multi-language projects. Standard for Android and Java builds.",
       "url": "https://gradle.org/releases/",
-      "icon": "https://cdn.simpleicons.org/gradle/007AFF",
+      "icon": "https://cdn.simpleicons.org/gradle",
       "category_id": 3,
       "tags": [
         "build",
@@ -1151,7 +1151,7 @@
       "name": "Flutter DevTools",
       "description": "Suite of debugging and performance tools. Widget inspector, timeline, memory, and network profiler.",
       "url": "https://github.com/flutter/devtools/releases",
-      "icon": "https://cdn.simpleicons.org/flutter/007AFF",
+      "icon": "https://cdn.simpleicons.org/flutter",
       "category_id": 4,
       "tags": [
         "debug",
@@ -1177,7 +1177,7 @@
       "name": "Pinia",
       "description": "Intuitive, type-safe state management for Vue. Officially recommended store with devtools support.",
       "url": "https://github.com/vuejs/pinia/releases",
-      "icon": "https://cdn.simpleicons.org/pinia/007AFF",
+      "icon": "https://cdn.simpleicons.org/pinia",
       "category_id": 5,
       "tags": [
         "state-management",
@@ -1203,7 +1203,7 @@
       "name": "TanStack Query",
       "description": "Async state management for React. Server state sync, caching, background refetching, pagination.",
       "url": "https://github.com/TanStack/query/releases",
-      "icon": "https://cdn.simpleicons.org/reactquery/007AFF",
+      "icon": "https://cdn.simpleicons.org/reactquery",
       "category_id": 6,
       "tags": [
         "state",
@@ -1229,7 +1229,7 @@
       "name": "Flask",
       "description": "Lightweight WSGI web framework. Simple, extensible, with a rich ecosystem of extensions.",
       "url": "https://github.com/pallets/flask/releases",
-      "icon": "https://cdn.simpleicons.org/flask/007AFF",
+      "icon": "https://cdn.simpleicons.org/flask",
       "category_id": 7,
       "tags": [
         "web",
@@ -1255,7 +1255,7 @@
       "name": "Composer",
       "description": "Dependency manager for PHP. Declares, installs, and updates project libraries.",
       "url": "https://github.com/composer/composer/releases",
-      "icon": "https://cdn.simpleicons.org/composer/007AFF",
+      "icon": "https://cdn.simpleicons.org/composer",
       "category_id": 8,
       "tags": [
         "dependency",
@@ -1280,7 +1280,7 @@
       "name": "Conan",
       "description": "C/C++ package manager. Open-source, decentralized, integrates with CMake and Meson.",
       "url": "https://github.com/conan-io/conan/releases",
-      "icon": "https://cdn.simpleicons.org/conan/007AFF",
+      "icon": "https://cdn.simpleicons.org/conan",
       "category_id": 9,
       "tags": [
         "package-manager",
@@ -1306,7 +1306,7 @@
       "name": "ASP.NET Core",
       "description": "Cross-platform, high-performance framework for modern web apps and APIs.",
       "url": "https://github.com/dotnet/aspnetcore/releases",
-      "icon": "https://cdn.simpleicons.org/dotnet/007AFF",
+      "icon": "https://cdn.simpleicons.org/dotnet",
       "category_id": 10,
       "tags": [
         "web",
@@ -1332,7 +1332,7 @@
       "name": "Maven",
       "description": "Build automation and project management for Java. Convention-over-configuration with extensive plugin ecosystem.",
       "url": "https://maven.apache.org/download.cgi",
-      "icon": "https://cdn.simpleicons.org/apachemaven/007AFF",
+      "icon": "https://cdn.simpleicons.org/apachemaven",
       "category_id": 3,
       "tags": [
         "build",
@@ -1358,7 +1358,7 @@
       "name": "Riverpod",
       "description": "Reactive caching and state-management library for Flutter. Compile-time safe, testable, and flexible.",
       "url": "https://github.com/rrousselGit/riverpod/releases",
-      "icon": "https://cdn.simpleicons.org/flutter/007AFF",
+      "icon": "https://cdn.simpleicons.org/flutter",
       "category_id": 4,
       "tags": [
         "state-management",
@@ -1384,7 +1384,7 @@
       "name": "Vue Router",
       "description": "Official router for Vue.js. Dynamic routing, lazy loading, navigation guards, and scroll behavior.",
       "url": "https://github.com/vuejs/router/releases",
-      "icon": "https://cdn.simpleicons.org/vuerouter/007AFF",
+      "icon": "https://cdn.simpleicons.org/vuerouter",
       "category_id": 5,
       "tags": [
         "router",
@@ -1410,7 +1410,7 @@
       "name": "Material UI",
       "description": "Material Design components for React. Comprehensive UI library with theming and accessibility.",
       "url": "https://github.com/mui/material-ui/releases",
-      "icon": "https://cdn.simpleicons.org/materialui/007AFF",
+      "icon": "https://cdn.simpleicons.org/materialui",
       "category_id": 6,
       "tags": [
         "material",
@@ -1436,7 +1436,7 @@
       "name": "Poetry",
       "description": "Python dependency management and packaging. Replaces pip, virtualenv, and setup.py.",
       "url": "https://github.com/python-poetry/poetry/releases",
-      "icon": "https://cdn.simpleicons.org/python/007AFF",
+      "icon": "https://cdn.simpleicons.org/python",
       "category_id": 7,
       "tags": [
         "dependency",
@@ -1462,7 +1462,7 @@
       "name": "PHPUnit",
       "description": "Unit testing framework for PHP. De facto standard with assertions, mocks, and data providers.",
       "url": "https://github.com/sebastianbergmann/phpunit/releases",
-      "icon": "https://cdn.simpleicons.org/phpunit/007AFF",
+      "icon": "https://cdn.simpleicons.org/phpunit",
       "category_id": 8,
       "tags": [
         "testing",
@@ -1488,7 +1488,7 @@
       "name": "vcpkg",
       "description": "C++ package manager by Microsoft. 2500+ libraries with CMake integration.",
       "url": "https://github.com/microsoft/vcpkg/releases",
-      "icon": "https://cdn.simpleicons.org/vcpkg/007AFF",
+      "icon": "https://cdn.simpleicons.org/vcpkg",
       "category_id": 9,
       "tags": [
         "package-manager",
@@ -1514,7 +1514,7 @@
       "name": "Entity Framework",
       "description": "Microsoft ORM for .NET. Code-first, database-first, migrations, LINQ queries.",
       "url": "https://github.com/dotnet/efcore/releases",
-      "icon": "https://cdn.simpleicons.org/dotnet/007AFF",
+      "icon": "https://cdn.simpleicons.org/dotnet",
       "category_id": 10,
       "tags": [
         "orm",
@@ -1540,7 +1540,7 @@
       "name": "Cobra",
       "description": "Library for creating powerful modern CLI applications with commands, args and flags.",
       "url": "https://github.com/spf13/cobra/releases",
-      "icon": "https://cdn.simpleicons.org/go/007AFF",
+      "icon": "https://cdn.simpleicons.org/go",
       "category_id": 1,
       "tags": [
         "cli",
@@ -1566,7 +1566,7 @@
       "name": "Diesel",
       "description": "Safe, extensible ORM and query builder for Rust. Compile-time checked SQL queries with type safety.",
       "url": "https://github.com/diesel-rs/diesel/releases",
-      "icon": "https://cdn.simpleicons.org/rust/007AFF",
+      "icon": "https://cdn.simpleicons.org/rust",
       "category_id": 2,
       "tags": [
         "orm",
@@ -1592,7 +1592,7 @@
       "name": "Flutter Bloc",
       "description": "Predictable state management for Flutter. BLoC pattern with separation of presentation and business logic.",
       "url": "https://github.com/felangel/bloc/releases",
-      "icon": "https://cdn.simpleicons.org/flutter/007AFF",
+      "icon": "https://cdn.simpleicons.org/flutter",
       "category_id": 4,
       "tags": [
         "state-management",
@@ -1618,7 +1618,7 @@
       "name": "Ant Design",
       "description": "Enterprise-class UI design language and React component library. 60+ components.",
       "url": "https://github.com/ant-design/ant-design/releases",
-      "icon": "https://cdn.simpleicons.org/antdesign/007AFF",
+      "icon": "https://cdn.simpleicons.org/antdesign",
       "category_id": 6,
       "tags": [
         "enterprise",
@@ -1644,7 +1644,7 @@
       "name": "PHPStan",
       "description": "Static analysis tool for PHP. Discovers bugs without writing tests, focuses on type errors.",
       "url": "https://github.com/phpstan/phpstan/releases",
-      "icon": "https://cdn.simpleicons.org/phpstan/007AFF",
+      "icon": "https://cdn.simpleicons.org/phpstan",
       "category_id": 8,
       "tags": [
         "static-analysis",
@@ -1670,7 +1670,7 @@
       "name": "Boost",
       "description": "Peer-reviewed portable C++ source libraries. 180+ libraries covering many domains.",
       "url": "https://www.boost.org/users/download/",
-      "icon": "https://cdn.simpleicons.org/boost/007AFF",
+      "icon": "https://cdn.simpleicons.org/boost",
       "category_id": 9,
       "tags": [
         "library",
@@ -1696,7 +1696,7 @@
       "name": "Blazor",
       "description": "Interactive web UIs with C# instead of JavaScript. WebAssembly or SignalR.",
       "url": "https://github.com/dotnet/aspnetcore/releases",
-      "icon": "https://cdn.simpleicons.org/blazor/007AFF",
+      "icon": "https://cdn.simpleicons.org/blazor",
       "category_id": 10,
       "tags": [
         "webassembly",
@@ -1722,7 +1722,7 @@
       "name": "Delve",
       "description": "Go debugger. Full-featured debugging tool for Go with breakpoints, variable inspection, goroutine tracing.",
       "url": "https://github.com/go-delve/delve/releases",
-      "icon": "https://cdn.simpleicons.org/go/007AFF",
+      "icon": "https://cdn.simpleicons.org/go",
       "category_id": 1,
       "tags": [
         "debugger",
@@ -1747,7 +1747,7 @@
       "name": "Tokio",
       "description": "Runtime for writing reliable, asynchronous, and slim applications with Rust.",
       "url": "https://github.com/tokio-rs/tokio/releases",
-      "icon": "https://cdn.simpleicons.org/tokio/007AFF",
+      "icon": "https://cdn.simpleicons.org/tokio",
       "category_id": 2,
       "tags": [
         "async",
@@ -1773,7 +1773,7 @@
       "name": "JUnit",
       "description": "Unit testing framework for Java. De facto standard with assertions, test runners, and parameterized tests.",
       "url": "https://github.com/junit-team/junit5/releases",
-      "icon": "https://cdn.simpleicons.org/junit5/007AFF",
+      "icon": "https://cdn.simpleicons.org/junit5",
       "category_id": 3,
       "tags": [
         "testing",
@@ -1799,7 +1799,7 @@
       "name": "Dio",
       "description": "Powerful HTTP client for Dart/Flutter. Interceptors, global config, FormData, request cancellation.",
       "url": "https://github.com/cfug/dio/releases",
-      "icon": "https://cdn.simpleicons.org/dart/007AFF",
+      "icon": "https://cdn.simpleicons.org/dart",
       "category_id": 4,
       "tags": [
         "http",
@@ -1825,7 +1825,7 @@
       "name": "VueUse",
       "description": "Collection of essential Vue Composition Utilities. 200+ composable functions for Vue apps.",
       "url": "https://github.com/vueuse/vueuse/releases",
-      "icon": "https://cdn.simpleicons.org/vueuse/007AFF",
+      "icon": "https://cdn.simpleicons.org/vueuse",
       "category_id": 5,
       "tags": [
         "composables",
@@ -1851,7 +1851,7 @@
       "name": "React Router",
       "description": "Declarative routing for React. Nested routes, lazy loading, data loading.",
       "url": "https://github.com/remix-run/react-router/releases",
-      "icon": "https://cdn.simpleicons.org/reactrouter/007AFF",
+      "icon": "https://cdn.simpleicons.org/reactrouter",
       "category_id": 6,
       "tags": [
         "router",
@@ -1877,7 +1877,7 @@
       "name": "pytest",
       "description": "Testing framework for Python. Simple, scalable, with fixtures, parametrize, and plugins.",
       "url": "https://github.com/pytest-dev/pytest/releases",
-      "icon": "https://cdn.simpleicons.org/pytest/007AFF",
+      "icon": "https://cdn.simpleicons.org/pytest",
       "category_id": 7,
       "tags": [
         "testing",
@@ -1903,7 +1903,7 @@
       "name": "Laravel Forge",
       "description": "Server management and deployment for PHP/Laravel. Provision, deploy, manage SSL and queues.",
       "url": "https://forge.laravel.com/",
-      "icon": "https://cdn.simpleicons.org/laravel/007AFF",
+      "icon": "https://cdn.simpleicons.org/laravel",
       "category_id": 8,
       "tags": [
         "deployment",
@@ -1929,7 +1929,7 @@
       "name": "MAUI",
       "description": ".NET Multi-platform App UI. Build native mobile and desktop apps from single C# codebase.",
       "url": "https://github.com/dotnet/maui/releases",
-      "icon": "https://cdn.simpleicons.org/dotnet/007AFF",
+      "icon": "https://cdn.simpleicons.org/dotnet",
       "category_id": 10,
       "tags": [
         "mobile",
@@ -1955,7 +1955,7 @@
       "name": "golangci-lint",
       "description": "Fast Go linters runner. Runs multiple linters in parallel, integrates with major editors and CI.",
       "url": "https://github.com/golangci/golangci-lint/releases",
-      "icon": "https://cdn.simpleicons.org/go/007AFF",
+      "icon": "https://cdn.simpleicons.org/go",
       "category_id": 1,
       "tags": [
         "linter",
@@ -1981,7 +1981,7 @@
       "name": "Clippy",
       "description": "Collection of lints to catch common mistakes and improve Rust code. Bundled with the Rust toolchain.",
       "url": "https://github.com/rust-lang/rust-clippy/releases",
-      "icon": "https://cdn.simpleicons.org/rust/007AFF",
+      "icon": "https://cdn.simpleicons.org/rust",
       "category_id": 2,
       "tags": [
         "linter",
@@ -2006,7 +2006,7 @@
       "name": "Hibernate",
       "description": "Object-relational mapping framework for Java. Powerful ORM with HQL, caching, and lazy loading.",
       "url": "https://hibernate.org/orm/releases/",
-      "icon": "https://cdn.simpleicons.org/hibernate/007AFF",
+      "icon": "https://cdn.simpleicons.org/hibernate",
       "category_id": 3,
       "tags": [
         "orm",
@@ -2032,7 +2032,7 @@
       "name": "Freezed",
       "description": "Code generation for immutable data classes in Dart. Union types, copyWith, JSON serialization.",
       "url": "https://github.com/rrousselGit/freezed/releases",
-      "icon": "https://cdn.simpleicons.org/dart/007AFF",
+      "icon": "https://cdn.simpleicons.org/dart",
       "category_id": 4,
       "tags": [
         "codegen",
@@ -2058,7 +2058,7 @@
       "name": "Element Plus",
       "description": "Vue 3 UI library for enterprise. 60+ high-quality components with i18n support.",
       "url": "https://github.com/element-plus/element-plus/releases",
-      "icon": "https://cdn.simpleicons.org/element/007AFF",
+      "icon": "https://cdn.simpleicons.org/element",
       "category_id": 5,
       "tags": [
         "components",
@@ -2084,7 +2084,7 @@
       "name": "Redux Toolkit",
       "description": "Official toolset for efficient Redux development. Simplified store setup and async logic.",
       "url": "https://github.com/reduxjs/redux-toolkit/releases",
-      "icon": "https://cdn.simpleicons.org/redux/007AFF",
+      "icon": "https://cdn.simpleicons.org/redux",
       "category_id": 6,
       "tags": [
         "state-management",
@@ -2110,7 +2110,7 @@
       "name": "Ruff",
       "description": "Extremely fast Python linter and formatter written in Rust. Replaces flake8, isort, and black.",
       "url": "https://github.com/astral-sh/ruff/releases",
-      "icon": "https://cdn.simpleicons.org/ruff/007AFF",
+      "icon": "https://cdn.simpleicons.org/ruff",
       "category_id": 7,
       "tags": [
         "linter",
@@ -2136,7 +2136,7 @@
       "name": "Xdebug",
       "description": "PHP extension for debugging and profiling. Step-through debugging, stack traces, coverage.",
       "url": "https://github.com/xdebug/xdebug/releases",
-      "icon": "https://cdn.simpleicons.org/php/007AFF",
+      "icon": "https://cdn.simpleicons.org/php",
       "category_id": 8,
       "tags": [
         "debugger",
@@ -2162,7 +2162,7 @@
       "name": "NuGet",
       "description": "Package manager for .NET. 400k+ packages with restore, versioning, MSBuild integration.",
       "url": "https://www.nuget.org/downloads",
-      "icon": "https://cdn.simpleicons.org/nuget/007AFF",
+      "icon": "https://cdn.simpleicons.org/nuget",
       "category_id": 10,
       "tags": [
         "package-manager",
@@ -2188,7 +2188,7 @@
       "name": "Air",
       "description": "Live reload for Go apps. Watch source code changes and rebuild/restart automatically.",
       "url": "https://github.com/cosmtrek/air/releases",
-      "icon": "https://cdn.simpleicons.org/go/007AFF",
+      "icon": "https://cdn.simpleicons.org/go",
       "category_id": 1,
       "tags": [
         "live-reload",
@@ -2214,7 +2214,7 @@
       "name": "Rust Analyzer",
       "description": "Rust LSP server. IDE features like code completion, goto definition, and inline hints.",
       "url": "https://github.com/rust-lang/rust-analyzer/releases",
-      "icon": "https://cdn.simpleicons.org/rust/007AFF",
+      "icon": "https://cdn.simpleicons.org/rust",
       "category_id": 2,
       "tags": [
         "lsp",
@@ -2240,7 +2240,7 @@
       "name": "Micronaut",
       "description": "Modern JVM framework for building modular, easily testable microservice and serverless applications.",
       "url": "https://github.com/micronaut-projects/micronaut-core/releases",
-      "icon": "https://cdn.simpleicons.org/micronaut/007AFF",
+      "icon": "https://cdn.simpleicons.org/micronaut",
       "category_id": 3,
       "tags": [
         "microservice",
@@ -2266,7 +2266,7 @@
       "name": "Melos",
       "description": "Manage multi-package Dart/Flutter projects. Workspace tool for monorepos with versioning and changelogs.",
       "url": "https://github.com/invertase/melos/releases",
-      "icon": "https://cdn.simpleicons.org/flutter/007AFF",
+      "icon": "https://cdn.simpleicons.org/flutter",
       "category_id": 4,
       "tags": [
         "monorepo",
@@ -2292,7 +2292,7 @@
       "name": "Naive UI",
       "description": "Vue 3 UI library with 80+ components. TypeScript-first, customizable, and fairly complete.",
       "url": "https://github.com/tusen-ai/naive-ui/releases",
-      "icon": "https://cdn.simpleicons.org/naiveui/007AFF",
+      "icon": "https://cdn.simpleicons.org/naiveui",
       "category_id": 5,
       "tags": [
         "components",
@@ -2318,7 +2318,7 @@
       "name": "React Hook Form",
       "description": "Performant forms with easy validation for React. Minimizes re-renders with schema validation.",
       "url": "https://github.com/react-hook-form/react-hook-form/releases",
-      "icon": "https://cdn.simpleicons.org/reacthookform/007AFF",
+      "icon": "https://cdn.simpleicons.org/reacthookform",
       "category_id": 6,
       "tags": [
         "form",
@@ -2344,7 +2344,7 @@
       "name": "Jupyter",
       "description": "Interactive computing notebook. Live code, equations, visualizations, and narrative text.",
       "url": "https://github.com/jupyter/notebook/releases",
-      "icon": "https://cdn.simpleicons.org/jupyter/007AFF",
+      "icon": "https://cdn.simpleicons.org/jupyter",
       "category_id": 7,
       "tags": [
         "notebook",
@@ -2370,7 +2370,7 @@
       "name": "Google Test",
       "description": "C++ testing framework by Google. xUnit-style with assertions and death tests.",
       "url": "https://github.com/google/googletest/releases",
-      "icon": "https://cdn.simpleicons.org/google/007AFF",
+      "icon": "https://cdn.simpleicons.org/google",
       "category_id": 9,
       "tags": [
         "testing",
@@ -2396,7 +2396,7 @@
       "name": "Avalonia",
       "description": "Cross-platform XAML UI framework for .NET. Native desktop for Win/Mac/Linux.",
       "url": "https://github.com/AvaloniaUI/Avalonia/releases",
-      "icon": "https://cdn.simpleicons.org/avalonia/007AFF",
+      "icon": "https://cdn.simpleicons.org/avalonia",
       "category_id": 10,
       "tags": [
         "desktop",
@@ -2422,7 +2422,7 @@
       "name": "Fiber",
       "description": "Express-inspired Go web framework built on Fasthttp. Fastest Go HTTP framework with low memory footprint.",
       "url": "https://github.com/gofiber/fiber/releases",
-      "icon": "https://cdn.simpleicons.org/go/007AFF",
+      "icon": "https://cdn.simpleicons.org/go",
       "category_id": 1,
       "tags": [
         "web",
@@ -2448,7 +2448,7 @@
       "name": "SeaORM",
       "description": "Async ORM for Rust built on sqlx. Dynamic query builder with entity model support.",
       "url": "https://github.com/SeaQL/sea-orm/releases",
-      "icon": "https://cdn.simpleicons.org/rust/007AFF",
+      "icon": "https://cdn.simpleicons.org/rust",
       "category_id": 2,
       "tags": [
         "orm",
@@ -2474,7 +2474,7 @@
       "name": "Netty",
       "description": "Async event-driven network framework for high-performance protocol servers and clients.",
       "url": "https://github.com/netty/netty/releases",
-      "icon": "https://cdn.simpleicons.org/netty/007AFF",
+      "icon": "https://cdn.simpleicons.org/netty",
       "category_id": 3,
       "tags": [
         "network",
@@ -2500,7 +2500,7 @@
       "name": "Very Good CLI",
       "description": "CLI tool for Dart/Flutter by VGV. Generates templates, runs tests, and manages releases.",
       "url": "https://github.com/VeryGoodOpenSource/very_good_cli/releases",
-      "icon": "https://cdn.simpleicons.org/flutter/007AFF",
+      "icon": "https://cdn.simpleicons.org/flutter",
       "category_id": 4,
       "tags": [
         "cli",
@@ -2526,7 +2526,7 @@
       "name": "Vue DevTools",
       "description": "Browser devtools extension for debugging Vue.js. Inspect components, state, router, and events.",
       "url": "https://github.com/vuejs/devtools/releases",
-      "icon": "https://cdn.simpleicons.org/vuedotjs/007AFF",
+      "icon": "https://cdn.simpleicons.org/vuedotjs",
       "category_id": 5,
       "tags": [
         "devtools",
@@ -2552,7 +2552,7 @@
       "name": "Zustand",
       "description": "Small, fast, scalable state management for React. Simple API without boilerplate.",
       "url": "https://github.com/pmndrs/zustand/releases",
-      "icon": "https://cdn.simpleicons.org/zustand/007AFF",
+      "icon": "https://cdn.simpleicons.org/zustand",
       "category_id": 6,
       "tags": [
         "state-management",
@@ -2578,7 +2578,7 @@
       "name": "Celery",
       "description": "Distributed task queue for Python. Async job processing with broker and result backend.",
       "url": "https://github.com/celery/celery/releases",
-      "icon": "https://cdn.simpleicons.org/celery/007AFF",
+      "icon": "https://cdn.simpleicons.org/celery",
       "category_id": 7,
       "tags": [
         "task-queue",
@@ -2604,7 +2604,7 @@
       "name": "Pest",
       "description": "Elegant testing framework for PHP. Jest-like API built on PHPUnit.",
       "url": "https://github.com/pestphp/pest/releases",
-      "icon": "https://cdn.simpleicons.org/pest/007AFF",
+      "icon": "https://cdn.simpleicons.org/pest",
       "category_id": 8,
       "tags": [
         "testing",
@@ -2630,7 +2630,7 @@
       "name": "Valgrind",
       "description": "Dynamic analysis framework. Detects memory leaks, threading errors, cache performance.",
       "url": "https://sourceware.org/pub/valgrind/",
-      "icon": "https://cdn.simpleicons.org/valgrind/007AFF",
+      "icon": "https://cdn.simpleicons.org/valgrind",
       "category_id": 9,
       "tags": [
         "memory",
@@ -2654,7 +2654,7 @@
       "name": "NUnit",
       "description": "Unit testing framework for .NET. Attribute-based with constraints and test runners.",
       "url": "https://github.com/nunit/nunit/releases",
-      "icon": "https://cdn.simpleicons.org/nunit/007AFF",
+      "icon": "https://cdn.simpleicons.org/nunit",
       "category_id": 10,
       "tags": [
         "testing",

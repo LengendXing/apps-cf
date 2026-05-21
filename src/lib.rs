@@ -76,6 +76,19 @@ impl ApiResponse {
 struct SystemConfig { layout: String }
 #[derive(Deserialize)] struct SystemConfigInput { layout: Option<String> }
 
+#[derive(Serialize, Deserialize, Clone)]
+struct NoteFolder { id: i64, name: String, sort_order: i64, created_at: String }
+
+#[derive(Serialize, Deserialize, Clone)]
+struct Note {
+    id: i64, title: String, content: String,
+    folder_id: i64, created_at: String, updated_at: String,
+    created_ip: String, size: i64, char_count: i64,
+}
+
+#[derive(Deserialize)] struct NoteFolderInput { name: Option<String>, sort_order: Option<i64> }
+#[derive(Deserialize)] struct NoteInput { title: Option<String>, content: Option<String>, folder_id: Option<i64> }
+
 // === KV Helpers ===
 
 async fn ensure_seeded(kv: &KvStore) -> Result<()> {
@@ -101,6 +114,8 @@ async fn ensure_seeded(kv: &KvStore) -> Result<()> {
     kv.put("next_id", 1000_i64)?.execute().await?;
     kv.put("access_password", "dabendi66")?.execute().await?;
     kv.put("seeded", "1")?.execute().await?;
+    kv.put("note_folders", &Vec::<NoteFolder>::new())?.execute().await?;
+    kv.put("notes", &Vec::<Note>::new())?.execute().await?;
     Ok(())
 }
 
@@ -126,6 +141,14 @@ async fn kv_scripts(kv: &KvStore) -> Result<Vec<Script>> {
 
 async fn kv_configs(kv: &KvStore) -> Result<Vec<Config>> {
     Ok(kv.get("configs").json::<Vec<Config>>().await?.unwrap_or_default())
+}
+
+async fn kv_note_folders(kv: &KvStore) -> Result<Vec<NoteFolder>> {
+    Ok(kv.get("note_folders").json::<Vec<NoteFolder>>().await?.unwrap_or_default())
+}
+
+async fn kv_notes(kv: &KvStore) -> Result<Vec<Note>> {
+    Ok(kv.get("notes").json::<Vec<Note>>().await?.unwrap_or_default())
 }
 
 async fn alloc_id(kv: &KvStore) -> Result<i64> {
@@ -714,7 +737,11 @@ async fn main(req: Request, env: Env, _ctx: Context) -> Result<Response> {
             if let Some(f) = params.iter().find(|(k,_)|k=="format").map(|(_,v)|v.to_lowercase()) {
                 if !f.is_empty() { configs.retain(|c|c.format.to_lowercase()==f); }
             }
-            json_resp(&ApiResponse::ok(serde_json::json!({"items":configs,"total":configs.len()})))
+            let page: usize = params.iter().find(|(k,_)|k=="page").and_then(|(_,v)|v.parse().ok()).unwrap_or(1);
+            let ps: usize = params.iter().find(|(k,_)|k=="page_size").and_then(|(_,v)|v.parse().ok()).unwrap_or(20);
+            let total = configs.len();
+            let items: Vec<_> = configs.into_iter().skip((page-1)*ps).take(ps).collect();
+            json_resp(&ApiResponse::ok(serde_json::json!({"items":items,"total":total,"page":page,"page_size":ps})))
         })
         .get_async("/api/configs/:id", |req, env| async move {
             let kv = env.kv("APPS_DATA")?;
@@ -789,6 +816,141 @@ async fn main(req: Request, env: Env, _ctx: Context) -> Result<Response> {
                 Err(_) => {}
             }
             match result { Ok(c) => json_resp(&ApiResponse::ok(serde_json::json!({"copy_count":c.copy_count}))), Err(msg) => json_resp(&ApiResponse::err(1004, msg)) }
+        })
+        // --- Note Folders CRUD ---
+        .get_async("/api/note-folders", |req, env| async move {
+            let kv = env.kv("APPS_DATA")?;
+            if let Err(_) = get_auth_user(&req, &kv).await { return json_resp_auth(&ApiResponse::err(1001, "Unauthorized")); }
+            let folders = kv_note_folders(&kv).await?;
+            json_resp(&ApiResponse::ok(serde_json::to_value(&folders)?))
+        })
+        .post_async("/api/note-folders", |mut req, env| async move {
+            let kv = env.kv("APPS_DATA")?;
+            let (uid, _) = match get_auth_user(&req, &kv).await { Ok(v) => v, Err(_) => return json_resp_auth(&ApiResponse::err(1001, "Unauthorized")) };
+            let input: NoteFolderInput = req.json().await?;
+            let name = input.name.unwrap_or_default();
+            if name.is_empty() { return json_resp(&ApiResponse::err(1003, "Folder name is required")); }
+            let id = alloc_id(&kv).await?;
+            let folder = NoteFolder { id, name, sort_order: input.sort_order.unwrap_or(0), created_at: "2026-05-21T00:00:00Z".to_string() };
+            let mut folders = kv_note_folders(&kv).await?;
+            log_action(&kv, uid, "create", "note_folder", Some(id), &format!("Created folder: {}", folder.name)).await?;
+            folders.push(folder.clone());
+            kv.put("note_folders", &folders)?.execute().await?;
+            json_resp(&ApiResponse::ok(serde_json::to_value(&folder)?))
+        })
+        .put_async("/api/note-folders/:id", |mut req, env| async move {
+            let kv = env.kv("APPS_DATA")?;
+            let (uid, _) = match get_auth_user(&req, &kv).await { Ok(v) => v, Err(_) => return json_resp_auth(&ApiResponse::err(1001, "Unauthorized")) };
+            let id: i64 = path_id(&req)?;
+            let input: NoteFolderInput = req.json().await?;
+            let mut folders = kv_note_folders(&kv).await?;
+            let result = match folders.iter_mut().find(|f|f.id==id) {
+                Some(f) => {
+                    if let Some(n) = input.name { f.name = n; }
+                    if let Some(o) = input.sort_order { f.sort_order = o; }
+                    Ok(f.clone())
+                }
+                None => Err("Folder not found")
+            };
+            match &result {
+                Ok(f) => { log_action(&kv, uid, "update", "note_folder", Some(id), &format!("Updated folder: {}", f.name)).await?; kv.put("note_folders", &folders)?.execute().await?; }
+                Err(_) => {}
+            }
+            match result { Ok(f) => json_resp(&ApiResponse::ok(serde_json::to_value(&f)?)), Err(msg) => json_resp(&ApiResponse::err(1004, msg)) }
+        })
+        .delete_async("/api/note-folders/:id", |req, env| async move {
+            let kv = env.kv("APPS_DATA")?;
+            let (uid, _) = match get_auth_user(&req, &kv).await { Ok(v) => v, Err(_) => return json_resp_auth(&ApiResponse::err(1001, "Unauthorized")) };
+            let id: i64 = path_id(&req)?;
+            let mut folders = kv_note_folders(&kv).await?;
+            let idx = folders.iter().position(|f|f.id==id);
+            match idx {
+                Some(i) => { let f = folders.remove(i); log_action(&kv, uid, "delete", "note_folder", Some(id), &format!("Deleted folder: {}", f.name)).await?; kv.put("note_folders", &folders)?.execute().await?; json_resp(&ApiResponse::ok(serde_json::json!({"deleted":true}))) }
+                None => json_resp(&ApiResponse::err(1004, "Folder not found"))
+            }
+        })
+        // --- Notes CRUD ---
+        .get_async("/api/notes", |req, env| async move {
+            let kv = env.kv("APPS_DATA")?;
+            let params = parse_params(&req)?;
+            let mut notes = kv_notes(&kv).await?;
+            if let Some(fid) = params.iter().find(|(k,_)|k=="folder_id").and_then(|(_,v)|v.parse::<i64>().ok()) {
+                notes.retain(|n|n.folder_id==fid);
+            }
+            if let Some(s) = params.iter().find(|(k,_)|k=="search").map(|(_,v)|v.to_lowercase()) {
+                if !s.is_empty() { notes.retain(|n|n.title.to_lowercase().contains(&s)||n.content.to_lowercase().contains(&s)); }
+            }
+            let page: usize = params.iter().find(|(k,_)|k=="page").and_then(|(_,v)|v.parse().ok()).unwrap_or(1);
+            let ps: usize = params.iter().find(|(k,_)|k=="page_size").and_then(|(_,v)|v.parse().ok()).unwrap_or(20);
+            notes.sort_by(|a,b| b.id.cmp(&a.id));
+            let total = notes.len();
+            let items: Vec<_> = notes.into_iter().skip((page-1)*ps).take(ps).collect();
+            json_resp(&ApiResponse::ok(serde_json::json!({"items":items,"total":total,"page":page,"page_size":ps})))
+        })
+        .get_async("/api/notes/:id", |req, env| async move {
+            let kv = env.kv("APPS_DATA")?;
+            let id: i64 = path_id(&req)?;
+            let notes = kv_notes(&kv).await?;
+            match notes.iter().find(|n|n.id==id).cloned() {
+                Some(n) => json_resp(&ApiResponse::ok(serde_json::to_value(&n)?)),
+                None => json_resp(&ApiResponse::err(1004, "Note not found"))
+            }
+        })
+        .post_async("/api/notes", |mut req, env| async move {
+            let kv = env.kv("APPS_DATA")?;
+            let (uid, _) = match get_auth_user(&req, &kv).await { Ok(v) => v, Err(_) => return json_resp_auth(&ApiResponse::err(1001, "Unauthorized")) };
+            let input: NoteInput = req.json().await?;
+            let title = input.title.unwrap_or_default();
+            let content = input.content.unwrap_or_default();
+            let folder_id = input.folder_id.unwrap_or(0);
+            if title.is_empty() { return json_resp(&ApiResponse::err(1003, "Note title is required")); }
+            if folder_id == 0 { return json_resp(&ApiResponse::err(1003, "folder_id is required")); }
+            let id = alloc_id(&kv).await?;
+            let now = "2026-05-21T00:00:00Z".to_string();
+            let ip = req.headers().get("CF-Connecting-IP")?.unwrap_or_else(|| "unknown".to_string());
+            let note = Note {
+                id, title, content: content.clone(), folder_id,
+                created_at: now.clone(), updated_at: now,
+                created_ip: ip, size: content.len() as i64, char_count: content.chars().count() as i64,
+            };
+            let mut notes = kv_notes(&kv).await?;
+            log_action(&kv, uid, "create", "note", Some(id), &format!("Created note: {}", note.title)).await?;
+            notes.push(note.clone());
+            kv.put("notes", &notes)?.execute().await?;
+            json_resp(&ApiResponse::ok(serde_json::to_value(&note)?))
+        })
+        .put_async("/api/notes/:id", |mut req, env| async move {
+            let kv = env.kv("APPS_DATA")?;
+            let (uid, _) = match get_auth_user(&req, &kv).await { Ok(v) => v, Err(_) => return json_resp_auth(&ApiResponse::err(1001, "Unauthorized")) };
+            let id: i64 = path_id(&req)?;
+            let input: NoteInput = req.json().await?;
+            let mut notes = kv_notes(&kv).await?;
+            let result = match notes.iter_mut().find(|n|n.id==id) {
+                Some(note) => {
+                    if let Some(t) = input.title { note.title = t; }
+                    if let Some(c) = input.content { note.content = c.clone(); note.size = c.len() as i64; note.char_count = c.chars().count() as i64; }
+                    if let Some(f) = input.folder_id { note.folder_id = f; }
+                    note.updated_at = "2026-05-21T00:00:00Z".to_string();
+                    Ok(note.clone())
+                }
+                None => Err("Note not found")
+            };
+            match &result {
+                Ok(n) => { log_action(&kv, uid, "update", "note", Some(id), &format!("Updated note: {}", n.title)).await?; kv.put("notes", &notes)?.execute().await?; }
+                Err(_) => {}
+            }
+            match result { Ok(n) => json_resp(&ApiResponse::ok(serde_json::to_value(&n)?)), Err(msg) => json_resp(&ApiResponse::err(1004, msg)) }
+        })
+        .delete_async("/api/notes/:id", |req, env| async move {
+            let kv = env.kv("APPS_DATA")?;
+            let (uid, _) = match get_auth_user(&req, &kv).await { Ok(v) => v, Err(_) => return json_resp_auth(&ApiResponse::err(1001, "Unauthorized")) };
+            let id: i64 = path_id(&req)?;
+            let mut notes = kv_notes(&kv).await?;
+            let idx = notes.iter().position(|n|n.id==id);
+            match idx {
+                Some(i) => { let n = notes.remove(i); log_action(&kv, uid, "delete", "note", Some(id), &format!("Deleted note: {}", n.title)).await?; kv.put("notes", &notes)?.execute().await?; json_resp(&ApiResponse::ok(serde_json::json!({"deleted":true}))) }
+                None => json_resp(&ApiResponse::err(1004, "Note not found"))
+            }
         })
         // --- SPA Fallback ---
         .get_async("/*path", |_req, _env| async move {

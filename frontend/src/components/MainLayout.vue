@@ -72,6 +72,7 @@ const navItems = computed(() => [
   { to: '/admin/system', label: t('nav.system'), icon: '⚙️' },
   { to: '/admin/users', label: t('nav.users'), icon: '👥' },
   { to: '/admin/audit', label: t('nav.audit'), icon: '📋' },
+  { to: '/admin/notes', label: t('nav.notes'), icon: '📝' },
 ])
 
 function isActive(path) {

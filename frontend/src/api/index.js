@@ -109,3 +109,20 @@ export const settingsApi = {
 export const statsApi = {
   get: () => api.get('/stats'),
 }
+
+// --- Note Folders ---
+export const noteFolderApi = {
+  list: () => api.get('/note-folders'),
+  create: (data) => api.post('/note-folders', data),
+  update: (id, data) => api.put(`/note-folders/${id}`, data),
+  delete: (id) => api.delete(`/note-folders/${id}`),
+}
+
+// --- Notes ---
+export const noteApi = {
+  list: (params) => api.get('/notes', { params }),
+  get: (id) => api.get(`/notes/${id}`),
+  create: (data) => api.post('/notes', data),
+  update: (id, data) => api.put(`/notes/${id}`, data),
+  delete: (id) => api.delete(`/notes/${id}`),
+}

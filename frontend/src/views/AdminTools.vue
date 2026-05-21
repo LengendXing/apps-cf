@@ -79,9 +79,50 @@
               <button @click="deleteTool(tool)" class="text-xs hover:opacity-60" style="color:#FF3B30">{{ t('adminTools.delete') }}</button>
             </div>
           </div>
+          <!-- Scripts for this tool -->
+          <div v-if="getScriptsForTool(tool.id).length" class="mt-2 pt-2" style="border-top:1px solid var(--divider)">
+            <div class="flex items-center justify-between mb-1">
+              <span class="text-[11px] font-semibold uppercase tracking-wide" style="color:var(--fg-tertiary)">{{ t('adminTools.scripts') }}</span>
+              <button @click="editScript(null, tool.id)" class="text-[11px] hover:opacity-60" style="color:var(--accent)">+ {{ t('adminTools.addScript') }}</button>
+            </div>
+            <div v-for="s in getScriptsForTool(tool.id)" :key="s.id" class="flex items-center gap-2 py-1">
+              <span class="text-xs font-medium" style="color:var(--fg-secondary)">{{ s.name }}</span>
+              <span v-if="s.platform" class="text-[10px] px-1.5 rounded" style="background:var(--bg-sidebar-active);color:var(--accent)">{{ s.platform }}</span>
+              <div class="flex-1" />
+              <button @click="editScript(s, tool.id)" class="text-[11px] hover:opacity-60" style="color:var(--accent)">{{ t('adminTools.edit') }}</button>
+              <button @click="deleteScript(s)" class="text-[11px] hover:opacity-60" style="color:#FF3B30">{{ t('adminTools.delete') }}</button>
+            </div>
+          </div>
+          <div v-else class="mt-2 pt-2 flex items-center justify-between" style="border-top:1px solid var(--divider)">
+            <span class="text-[11px]" style="color:var(--fg-tertiary)">{{ t('adminTools.scripts') }}: 0</span>
+            <button @click="editScript(null, tool.id)" class="text-[11px] hover:opacity-60" style="color:var(--accent)">+ {{ t('adminTools.addScript') }}</button>
+          </div>
         </div>
       </div>
       <p v-if="!categories.length" class="text-center py-16 text-sm" style="color:var(--fg-tertiary)">{{ t('adminTools.empty') }}</p>
+
+      <!-- Script Form Modal -->
+      <Transition name="modal">
+        <div v-if="showScriptForm" class="fixed inset-0 z-50 flex items-center justify-center">
+          <div class="absolute inset-0 bg-black/30 backdrop-blur-sm" @click="showScriptForm=false" />
+          <div class="relative w-full max-w-lg max-h-[85vh] flex flex-col rounded-apple-xl overflow-hidden" style="background:var(--bg-card);box-shadow:0 24px 80px rgba(0,0,0,0.25)">
+            <div class="flex items-center justify-between px-6 py-4" style="border-bottom:1px solid var(--divider)">
+              <h3 class="text-[15px] font-semibold" style="color:var(--fg)">{{ t('adminTools.addScript') }}</h3>
+              <button @click="showScriptForm=false" class="w-6 h-6 rounded-full flex items-center justify-center text-xs hover:opacity-60" style="background:var(--bg-sidebar-hover);color:var(--fg-secondary)">✕</button>
+            </div>
+            <div class="flex-1 overflow-y-auto p-6 space-y-4">
+              <div><label class="text-xs block mb-1" style="color:var(--fg-secondary)">{{ t('adminTools.scriptName') }}</label><input v-model="scriptForm.name" class="apple-input" /></div>
+              <div><label class="text-xs block mb-1" style="color:var(--fg-secondary)">{{ t('adminTools.scriptPlatform') }}</label><input v-model="scriptForm.platform" class="apple-input" /></div>
+              <div><label class="text-xs block mb-1" style="color:var(--fg-secondary)">{{ t('adminTools.scriptTags') }}</label><input v-model="scriptForm.tagsStr" placeholder="tag1,tag2" class="apple-input" /></div>
+              <div><label class="text-xs block mb-1" style="color:var(--fg-secondary)">{{ t('adminTools.scriptContent') }}</label><textarea v-model="scriptForm.content" rows="10" class="apple-input font-mono leading-relaxed" /></div>
+            </div>
+            <div class="flex justify-end gap-2 px-6 py-4" style="border-top:1px solid var(--divider)">
+              <button @click="showScriptForm=false" class="apple-btn-secondary">{{ t('adminTools.cancel') }}</button>
+              <button @click="saveScript" class="apple-btn">{{ t('adminTools.save') }}</button>
+            </div>
+          </div>
+        </div>
+      </Transition>
     </div>
   </MainLayout>
 </template>
@@ -90,7 +131,7 @@
 import { ref, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import MainLayout from '../components/MainLayout.vue'
-import { categoryApi, toolApi } from '../api'
+import { categoryApi, toolApi, scriptApi } from '../api'
 
 const { t } = useI18n()
 const categories = ref([])
@@ -101,6 +142,10 @@ const editingCat = ref(null)
 const editingTool = ref(null)
 const catForm = ref({ name: '', icon: '', sort_order: 0 })
 const toolForm = ref(defaultTool())
+const scripts = ref([])
+const showScriptForm = ref(false)
+const editingScript = ref(null)
+const scriptForm = ref({ tool_id: 0, name: '', content: '', platform: '', tagsStr: '', sort_order: 0 })
 
 function defaultTool() { return { name: '', category_id: 0, url: '', icon: '', description: '', is_featured: false, sort_order: 0, tagsStr: '', platformsStr: '', versions: [] } }
 function isUrl(s) { return s && (s.startsWith('http://') || s.startsWith('https://')) }
@@ -110,9 +155,10 @@ onMounted(fetch)
 
 async function fetch() {
   try {
-    const [catRes, toolRes] = await Promise.all([categoryApi.list(), toolApi.list()])
+    const [catRes, toolRes, scriptRes] = await Promise.all([categoryApi.list(), toolApi.list(), scriptApi.list()])
     categories.value = catRes.data || []
     tools.value = toolRes.data.items || []
+    scripts.value = scriptRes.data?.items || []
   } catch {}
 }
 
@@ -149,5 +195,24 @@ async function saveTool() {
 async function deleteTool(tool) {
   if (!confirm(t('adminTools.confirmDelete'))) return
   try { await toolApi.delete(tool.id); fetch() } catch {}
+}
+
+function getScriptsForTool(toolId) { return scripts.value.filter(s => s.tool_id === toolId) }
+
+function editScript(s, toolId) {
+  editingScript.value = s || null
+  scriptForm.value = s ? { tool_id: s.tool_id, name: s.name, content: s.content, platform: s.platform || '', tagsStr: (s.tags || []).join(','), sort_order: s.sort_order || 0 } : { tool_id: toolId, name: '', content: '', platform: '', tagsStr: '', sort_order: 0 }
+  showScriptForm.value = true
+}
+
+async function saveScript() {
+  if (!scriptForm.value.name) return
+  const data = { tool_id: scriptForm.value.tool_id, name: scriptForm.value.name, content: scriptForm.value.content, platform: scriptForm.value.platform, tags: scriptForm.value.tagsStr ? scriptForm.value.tagsStr.split(',').map(s => s.trim()).filter(Boolean) : [], sort_order: scriptForm.value.sort_order }
+  try { if (editingScript.value) await scriptApi.update(editingScript.value.id, data); else await scriptApi.create(data); showScriptForm.value = false; fetch() } catch {}
+}
+
+async function deleteScript(s) {
+  if (!confirm(t('adminTools.confirmDelete'))) return
+  try { await scriptApi.delete(s.id); fetch() } catch {}
 }
 </script>
