@@ -10,6 +10,8 @@ const api = axios.create({
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('token')
   if (token) config.headers.Authorization = `Bearer ${token}`
+  const accessPwd = sessionStorage.getItem('access_password')
+  if (accessPwd) config.headers['X-Access-Password'] = accessPwd
   return config
 })
 

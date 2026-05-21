@@ -73,7 +73,7 @@ export default {
   },
   adminNotes: {
     title: '笔记管理', addFolder: '添加文件夹', editFolder: '编辑文件夹', folderName: '文件夹名称',
-    addNote: '添加笔记', editNote: '编辑笔记', noteTitle: '标题', noteContent: '内容',
+    addNote: '添加', editNote: '编辑笔记', noteTitle: '标题', noteContent: '内容',
     selectFolder: '选择文件夹', createFolder: '新建文件夹', or: '或',
     folder: '文件夹', createdAt: '创建时间', updatedAt: '修改时间',
     createdIp: '创建IP', size: '大小', charCount: '字符数', save: '保存', cancel: '取消',

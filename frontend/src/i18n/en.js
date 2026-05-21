@@ -53,7 +53,7 @@ export default {
   },
   adminNotes: {
     title: 'Notes', addFolder: 'Add Folder', editFolder: 'Edit Folder', folderName: 'Folder Name',
-    addNote: 'Add Note', editNote: 'Edit Note', noteTitle: 'Title', noteContent: 'Content',
+    addNote: 'Add', editNote: 'Edit Note', noteTitle: 'Title', noteContent: 'Content',
     selectFolder: 'Select Folder', createFolder: 'Create Folder', or: 'or',
     folder: 'Folder', createdAt: 'Created', updatedAt: 'Updated',
     createdIp: 'Created IP', size: 'Size', charCount: 'Chars', save: 'Save', cancel: 'Cancel',

@@ -237,6 +237,13 @@ async fn get_auth_user(req: &Request, kv: &KvStore) -> Result<(i64, String)> {
     Ok((uid, username))
 }
 
+async fn check_access_or_admin(req: &Request, kv: &KvStore) -> Result<()> {
+    if get_auth_user(req, kv).await.is_ok() { return Ok(()); }
+    let pwd = req.headers().get("X-Access-Password")?.unwrap_or_default();
+    let stored = kv.get("access_password").text().await?.unwrap_or_else(|| "dabendi66".to_string());
+    if pwd == stored { Ok(()) } else { Err(worker::Error::RustError("Unauthorized".into())) }
+}
+
 fn path_id(req: &Request) -> Result<i64> {
     let url = req.url()?;
     Ok(url.path().rsplit('/').next().unwrap_or("0").parse().unwrap_or(0))
@@ -818,29 +825,28 @@ async fn main(req: Request, env: Env, _ctx: Context) -> Result<Response> {
             match result { Ok(c) => json_resp(&ApiResponse::ok(serde_json::json!({"copy_count":c.copy_count}))), Err(msg) => json_resp(&ApiResponse::err(1004, msg)) }
         })
         // --- Note Folders CRUD ---
-        .get_async("/api/note-folders", |req, env| async move {
+        .get_async("/api/note-folders", |_req, env| async move {
             let kv = env.kv("APPS_DATA")?;
-            if let Err(_) = get_auth_user(&req, &kv).await { return json_resp_auth(&ApiResponse::err(1001, "Unauthorized")); }
             let folders = kv_note_folders(&kv).await?;
             json_resp(&ApiResponse::ok(serde_json::to_value(&folders)?))
         })
         .post_async("/api/note-folders", |mut req, env| async move {
             let kv = env.kv("APPS_DATA")?;
-            let (uid, _) = match get_auth_user(&req, &kv).await { Ok(v) => v, Err(_) => return json_resp_auth(&ApiResponse::err(1001, "Unauthorized")) };
+            if let Err(_) = check_access_or_admin(&req, &kv).await { return json_resp_auth(&ApiResponse::err(1001, "Unauthorized")); }
             let input: NoteFolderInput = req.json().await?;
             let name = input.name.unwrap_or_default();
             if name.is_empty() { return json_resp(&ApiResponse::err(1003, "Folder name is required")); }
             let id = alloc_id(&kv).await?;
             let folder = NoteFolder { id, name, sort_order: input.sort_order.unwrap_or(0), created_at: "2026-05-21T00:00:00Z".to_string() };
             let mut folders = kv_note_folders(&kv).await?;
-            log_action(&kv, uid, "create", "note_folder", Some(id), &format!("Created folder: {}", folder.name)).await?;
+            log_action(&kv, 0, "create", "note_folder", Some(id), &format!("Created folder: {}", folder.name)).await?;
             folders.push(folder.clone());
             kv.put("note_folders", &folders)?.execute().await?;
             json_resp(&ApiResponse::ok(serde_json::to_value(&folder)?))
         })
         .put_async("/api/note-folders/:id", |mut req, env| async move {
             let kv = env.kv("APPS_DATA")?;
-            let (uid, _) = match get_auth_user(&req, &kv).await { Ok(v) => v, Err(_) => return json_resp_auth(&ApiResponse::err(1001, "Unauthorized")) };
+            if let Err(_) = check_access_or_admin(&req, &kv).await { return json_resp_auth(&ApiResponse::err(1001, "Unauthorized")); }
             let id: i64 = path_id(&req)?;
             let input: NoteFolderInput = req.json().await?;
             let mut folders = kv_note_folders(&kv).await?;
@@ -853,19 +859,19 @@ async fn main(req: Request, env: Env, _ctx: Context) -> Result<Response> {
                 None => Err("Folder not found")
             };
             match &result {
-                Ok(f) => { log_action(&kv, uid, "update", "note_folder", Some(id), &format!("Updated folder: {}", f.name)).await?; kv.put("note_folders", &folders)?.execute().await?; }
+                Ok(f) => { log_action(&kv, 0, "update", "note_folder", Some(id), &format!("Updated folder: {}", f.name)).await?; kv.put("note_folders", &folders)?.execute().await?; }
                 Err(_) => {}
             }
             match result { Ok(f) => json_resp(&ApiResponse::ok(serde_json::to_value(&f)?)), Err(msg) => json_resp(&ApiResponse::err(1004, msg)) }
         })
         .delete_async("/api/note-folders/:id", |req, env| async move {
             let kv = env.kv("APPS_DATA")?;
-            let (uid, _) = match get_auth_user(&req, &kv).await { Ok(v) => v, Err(_) => return json_resp_auth(&ApiResponse::err(1001, "Unauthorized")) };
+            if let Err(_) = check_access_or_admin(&req, &kv).await { return json_resp_auth(&ApiResponse::err(1001, "Unauthorized")); }
             let id: i64 = path_id(&req)?;
             let mut folders = kv_note_folders(&kv).await?;
             let idx = folders.iter().position(|f|f.id==id);
             match idx {
-                Some(i) => { let f = folders.remove(i); log_action(&kv, uid, "delete", "note_folder", Some(id), &format!("Deleted folder: {}", f.name)).await?; kv.put("note_folders", &folders)?.execute().await?; json_resp(&ApiResponse::ok(serde_json::json!({"deleted":true}))) }
+                Some(i) => { let f = folders.remove(i); log_action(&kv, 0, "delete", "note_folder", Some(id), &format!("Deleted folder: {}", f.name)).await?; kv.put("note_folders", &folders)?.execute().await?; json_resp(&ApiResponse::ok(serde_json::json!({"deleted":true}))) }
                 None => json_resp(&ApiResponse::err(1004, "Folder not found"))
             }
         })
@@ -898,7 +904,7 @@ async fn main(req: Request, env: Env, _ctx: Context) -> Result<Response> {
         })
         .post_async("/api/notes", |mut req, env| async move {
             let kv = env.kv("APPS_DATA")?;
-            let (uid, _) = match get_auth_user(&req, &kv).await { Ok(v) => v, Err(_) => return json_resp_auth(&ApiResponse::err(1001, "Unauthorized")) };
+            if let Err(_) = check_access_or_admin(&req, &kv).await { return json_resp_auth(&ApiResponse::err(1001, "Unauthorized")); }
             let input: NoteInput = req.json().await?;
             let title = input.title.unwrap_or_default();
             let content = input.content.unwrap_or_default();
@@ -914,14 +920,14 @@ async fn main(req: Request, env: Env, _ctx: Context) -> Result<Response> {
                 created_ip: ip, size: content.len() as i64, char_count: content.chars().count() as i64,
             };
             let mut notes = kv_notes(&kv).await?;
-            log_action(&kv, uid, "create", "note", Some(id), &format!("Created note: {}", note.title)).await?;
+            log_action(&kv, 0, "create", "note", Some(id), &format!("Created note: {}", note.title)).await?;
             notes.push(note.clone());
             kv.put("notes", &notes)?.execute().await?;
             json_resp(&ApiResponse::ok(serde_json::to_value(&note)?))
         })
         .put_async("/api/notes/:id", |mut req, env| async move {
             let kv = env.kv("APPS_DATA")?;
-            let (uid, _) = match get_auth_user(&req, &kv).await { Ok(v) => v, Err(_) => return json_resp_auth(&ApiResponse::err(1001, "Unauthorized")) };
+            if let Err(_) = check_access_or_admin(&req, &kv).await { return json_resp_auth(&ApiResponse::err(1001, "Unauthorized")); }
             let id: i64 = path_id(&req)?;
             let input: NoteInput = req.json().await?;
             let mut notes = kv_notes(&kv).await?;
@@ -936,19 +942,19 @@ async fn main(req: Request, env: Env, _ctx: Context) -> Result<Response> {
                 None => Err("Note not found")
             };
             match &result {
-                Ok(n) => { log_action(&kv, uid, "update", "note", Some(id), &format!("Updated note: {}", n.title)).await?; kv.put("notes", &notes)?.execute().await?; }
+                Ok(n) => { log_action(&kv, 0, "update", "note", Some(id), &format!("Updated note: {}", n.title)).await?; kv.put("notes", &notes)?.execute().await?; }
                 Err(_) => {}
             }
             match result { Ok(n) => json_resp(&ApiResponse::ok(serde_json::to_value(&n)?)), Err(msg) => json_resp(&ApiResponse::err(1004, msg)) }
         })
         .delete_async("/api/notes/:id", |req, env| async move {
             let kv = env.kv("APPS_DATA")?;
-            let (uid, _) = match get_auth_user(&req, &kv).await { Ok(v) => v, Err(_) => return json_resp_auth(&ApiResponse::err(1001, "Unauthorized")) };
+            if let Err(_) = check_access_or_admin(&req, &kv).await { return json_resp_auth(&ApiResponse::err(1001, "Unauthorized")); }
             let id: i64 = path_id(&req)?;
             let mut notes = kv_notes(&kv).await?;
             let idx = notes.iter().position(|n|n.id==id);
             match idx {
-                Some(i) => { let n = notes.remove(i); log_action(&kv, uid, "delete", "note", Some(id), &format!("Deleted note: {}", n.title)).await?; kv.put("notes", &notes)?.execute().await?; json_resp(&ApiResponse::ok(serde_json::json!({"deleted":true}))) }
+                Some(i) => { let n = notes.remove(i); log_action(&kv, 0, "delete", "note", Some(id), &format!("Deleted note: {}", n.title)).await?; kv.put("notes", &notes)?.execute().await?; json_resp(&ApiResponse::ok(serde_json::json!({"deleted":true}))) }
                 None => json_resp(&ApiResponse::err(1004, "Note not found"))
             }
         })

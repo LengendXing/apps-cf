@@ -65,37 +65,39 @@
           <button @click="deleteCategory(cat)" class="text-xs hover:opacity-60" style="color:#FF3B30">{{ t('adminTools.delete') }}</button>
         </div>
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-          <div v-for="tool in getToolsByCat(cat.id)" :key="tool.id" class="apple-card p-4 flex items-center gap-3 hover:shadow-apple-md transition-shadow">
-            <div class="w-10 h-10 rounded-apple flex items-center justify-center text-lg flex-shrink-0 overflow-hidden" style="background:var(--bg-sidebar-hover)">
-              <img v-if="isUrl(tool.icon)" :src="tool.icon" class="w-full h-full object-cover rounded-apple" />
-              <span v-else>{{ tool.icon || '🔗' }}</span>
+          <div v-for="tool in getToolsByCat(cat.id)" :key="tool.id" class="apple-card p-4 hover:shadow-apple-md transition-shadow">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-apple flex items-center justify-center text-lg flex-shrink-0 overflow-hidden" style="background:var(--bg-sidebar-hover)">
+                <img v-if="isUrl(tool.icon)" :src="tool.icon" class="w-full h-full object-cover rounded-apple" />
+                <span v-else>{{ tool.icon || '🔗' }}</span>
+              </div>
+              <div class="min-w-0 flex-1">
+                <p class="text-[13px] font-medium truncate" style="color:var(--fg)">{{ tool.name }}</p>
+                <p class="text-xs truncate" style="color:var(--fg-secondary)">{{ tool.description }}</p>
+              </div>
+              <div class="flex gap-1 flex-shrink-0">
+                <button @click="editTool(tool)" class="text-xs hover:opacity-60" style="color:var(--accent)">{{ t('adminTools.edit') }}</button>
+                <button @click="deleteTool(tool)" class="text-xs hover:opacity-60" style="color:#FF3B30">{{ t('adminTools.delete') }}</button>
+              </div>
             </div>
-            <div class="min-w-0 flex-1">
-              <p class="text-[13px] font-medium truncate" style="color:var(--fg)">{{ tool.name }}</p>
-              <p class="text-xs truncate" style="color:var(--fg-secondary)">{{ tool.description }}</p>
+            <!-- Scripts for this tool -->
+            <div v-if="getScriptsForTool(tool.id).length" class="mt-2 pt-2" style="border-top:1px solid var(--divider)">
+              <div class="flex items-center justify-between mb-1">
+                <span class="text-[11px] font-semibold uppercase tracking-wide" style="color:var(--fg-tertiary)">{{ t('adminTools.scripts') }}</span>
+                <button @click="editScript(null, tool.id)" class="text-[11px] hover:opacity-60" style="color:var(--accent)">+ {{ t('adminTools.addScript') }}</button>
+              </div>
+              <div v-for="s in getScriptsForTool(tool.id)" :key="s.id" class="flex items-center gap-2 py-1">
+                <span class="text-xs font-medium" style="color:var(--fg-secondary)">{{ s.name }}</span>
+                <span v-if="s.platform" class="text-[10px] px-1.5 rounded" style="background:var(--bg-sidebar-active);color:var(--accent)">{{ s.platform }}</span>
+                <div class="flex-1" />
+                <button @click="editScript(s, tool.id)" class="text-[11px] hover:opacity-60" style="color:var(--accent)">{{ t('adminTools.edit') }}</button>
+                <button @click="deleteScript(s)" class="text-[11px] hover:opacity-60" style="color:#FF3B30">{{ t('adminTools.delete') }}</button>
+              </div>
             </div>
-            <div class="flex gap-1 flex-shrink-0">
-              <button @click="editTool(tool)" class="text-xs hover:opacity-60" style="color:var(--accent)">{{ t('adminTools.edit') }}</button>
-              <button @click="deleteTool(tool)" class="text-xs hover:opacity-60" style="color:#FF3B30">{{ t('adminTools.delete') }}</button>
-            </div>
-          </div>
-          <!-- Scripts for this tool -->
-          <div v-if="getScriptsForTool(tool.id).length" class="mt-2 pt-2" style="border-top:1px solid var(--divider)">
-            <div class="flex items-center justify-between mb-1">
-              <span class="text-[11px] font-semibold uppercase tracking-wide" style="color:var(--fg-tertiary)">{{ t('adminTools.scripts') }}</span>
+            <div v-else class="mt-2 pt-2 flex items-center justify-between" style="border-top:1px solid var(--divider)">
+              <span class="text-[11px]" style="color:var(--fg-tertiary)">{{ t('adminTools.scripts') }}: 0</span>
               <button @click="editScript(null, tool.id)" class="text-[11px] hover:opacity-60" style="color:var(--accent)">+ {{ t('adminTools.addScript') }}</button>
             </div>
-            <div v-for="s in getScriptsForTool(tool.id)" :key="s.id" class="flex items-center gap-2 py-1">
-              <span class="text-xs font-medium" style="color:var(--fg-secondary)">{{ s.name }}</span>
-              <span v-if="s.platform" class="text-[10px] px-1.5 rounded" style="background:var(--bg-sidebar-active);color:var(--accent)">{{ s.platform }}</span>
-              <div class="flex-1" />
-              <button @click="editScript(s, tool.id)" class="text-[11px] hover:opacity-60" style="color:var(--accent)">{{ t('adminTools.edit') }}</button>
-              <button @click="deleteScript(s)" class="text-[11px] hover:opacity-60" style="color:#FF3B30">{{ t('adminTools.delete') }}</button>
-            </div>
-          </div>
-          <div v-else class="mt-2 pt-2 flex items-center justify-between" style="border-top:1px solid var(--divider)">
-            <span class="text-[11px]" style="color:var(--fg-tertiary)">{{ t('adminTools.scripts') }}: 0</span>
-            <button @click="editScript(null, tool.id)" class="text-[11px] hover:opacity-60" style="color:var(--accent)">+ {{ t('adminTools.addScript') }}</button>
           </div>
         </div>
       </div>

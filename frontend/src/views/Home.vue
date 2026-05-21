@@ -44,14 +44,27 @@
     <template v-if="viewMode==='notes'">
       <div class="flex-1 flex overflow-hidden">
         <aside class="w-56 flex-shrink-0 overflow-y-auto py-3 px-2" style="border-right:1px solid var(--border-color)">
-          <div v-for="folder in noteFolders" :key="folder.id" class="mb-2">
+          <div class="flex items-center justify-between px-2 mb-2">
+            <span class="text-xs font-semibold uppercase tracking-wide" style="color:var(--muted-foreground)">Folders</span>
+            <button @click="showNewFolderInput=true" class="text-xs hover:opacity-60" style="color:var(--foreground)">+ Folder</button>
+          </div>
+          <div v-if="showNewFolderInput" class="px-2 mb-2 flex gap-1">
+            <input v-model="newFolderName" placeholder="Folder name" class="flex-1 px-2 py-1 rounded text-xs outline-none" style="background:var(--background);border:1px solid var(--border-color);color:var(--foreground)" @keyup.enter="createFolder" />
+            <button @click="createFolder" class="text-xs px-1.5 rounded" style="background:var(--foreground);color:var(--background)">OK</button>
+          </div>
+          <div v-for="folder in noteFolders" :key="folder.id" class="mb-1">
             <div @click="toggleFolder(folder.id)" class="flex items-center gap-1.5 px-2 py-1.5 rounded-lg cursor-pointer text-sm font-medium transition-colors" style="color:var(--foreground)">
               <svg class="w-3.5 h-3.5 transition-transform" :style="openFolders.has(folder.id)?'transform:rotate(90deg)':''" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5l8 7-8 7z"/></svg>
               <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
-              <span class="truncate">{{ folder.name }}</span>
+              <span class="truncate flex-1">{{ folder.name }}</span>
+              <button @click.stop="deleteFolder(folder)" class="text-[10px] hover:opacity-60" style="color:#FF3B30">✕</button>
             </div>
             <div v-if="openFolders.has(folder.id)" class="ml-4 space-y-0.5">
-              <div v-for="n in folderNotes(folder.id)" :key="n.id" @click="selectedNote=n" class="px-2 py-1 rounded-lg cursor-pointer text-xs truncate transition-colors" :style="selectedNote?.id===n.id?'background:var(--foreground);color:var(--background)':'color:var(--muted-foreground)'">{{ n.title }}</div>
+              <div v-for="n in folderNotes(folder.id)" :key="n.id" @click="selectedNote=n" class="flex items-center gap-1 px-2 py-1 rounded-lg cursor-pointer text-xs truncate transition-colors" :style="selectedNote?.id===n.id?'background:var(--foreground);color:var(--background)':'color:var(--muted-foreground)'">
+                <span class="truncate flex-1">{{ n.title }}</span>
+                <button @click.stop="deleteNote(n)" class="text-[10px] hover:opacity-60" style="color:#FF3B30">✕</button>
+              </div>
+              <button @click="createNoteInFolder(folder.id)" class="px-2 py-0.5 text-[11px] hover:opacity-60" style="color:var(--foreground)">+ {{ t('home.newNote') }}</button>
             </div>
           </div>
           <div v-if="!noteFolders.length" class="text-xs text-center py-8" style="color:var(--muted-foreground)">{{ t('home.noFolders') }}</div>
@@ -59,7 +72,7 @@
         <main class="flex-1 flex flex-col overflow-hidden">
           <div v-if="selectedNote" class="flex-1 flex flex-col">
             <div class="flex items-center justify-between px-4 py-2" style="border-bottom:1px solid var(--border-color)">
-              <span class="text-sm font-medium" style="color:var(--foreground)">{{ selectedNote.title }}</span>
+              <input v-model="selectedNote.title" class="text-sm font-medium outline-none flex-1" style="background:transparent;color:var(--foreground)" @input="onNoteInput" />
               <span class="text-xs flex items-center gap-1" :style="autoSaveState==='saving'?'color:var(--muted-foreground)':'color:#34C759'">
                 <svg v-if="autoSaveState==='saving'" class="w-3 h-3 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v4m0 12v4m-7.07-3.93l2.83-2.83m8.48-8.48l2.83-2.83M2 12h4m12 0h4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83"/></svg>
                 <svg v-else-if="autoSaveState==='saved'" class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
@@ -237,6 +250,8 @@ const selectedNote = ref(null)
 const noteEditContent = ref('')
 const autoSaveState = ref('')
 let autoSaveTimer = null
+const showNewFolderInput = ref(false)
+const newFolderName = ref('')
 
 function isUrl(s) { return s && (s.startsWith('http://') || s.startsWith('https://')) }
 
@@ -268,6 +283,7 @@ async function verifyPassword() {
     const res = await settingsApi.verifyAccessPassword({ password: pwd.value })
     if (res.data?.verified) {
       sessionStorage.setItem('access_verified', 'true')
+      sessionStorage.setItem('access_password', pwd.value)
       locked.value = false
       loadData()
     } else { pwdError.value = t('home.wrongPassword') }
@@ -326,12 +342,52 @@ function onNoteInput() {
   autoSaveTimer = setTimeout(async () => {
     autoSaveState.value = 'saving'
     try {
-      await noteApi.update(selectedNote.value.id, { content: noteEditContent.value })
+      await noteApi.update(selectedNote.value.id, { title: selectedNote.value.title, content: noteEditContent.value })
       selectedNote.value.content = noteEditContent.value
       autoSaveState.value = 'saved'
       setTimeout(() => { autoSaveState.value = '' }, 2000)
     } catch { autoSaveState.value = '' }
   }, 5000)
+}
+
+async function createFolder() {
+  if (!newFolderName.value.trim()) return
+  try {
+    await noteFolderApi.create({ name: newFolderName.value.trim(), sort_order: 0 })
+    newFolderName.value = ''
+    showNewFolderInput.value = false
+    await loadNoteFolders()
+  } catch {}
+}
+
+async function deleteFolder(folder) {
+  if (!confirm('Delete folder and all notes?')) return
+  try {
+    await noteFolderApi.delete(folder.id)
+    if (selectedNote.value && folderNotes(folder.id).some(n => n.id === selectedNote.value.id)) selectedNote.value = null
+    await loadNoteFolders()
+    await loadAllNotes()
+  } catch {}
+}
+
+async function createNoteInFolder(folderId) {
+  const title = prompt(t('home.noteTitle'))
+  if (!title) return
+  try {
+    await noteApi.create({ title, content: '', folder_id: folderId })
+    await loadAllNotes()
+    const notes = folderNotes(folderId)
+    if (notes.length) selectedNote.value = notes[notes.length - 1]
+  } catch {}
+}
+
+async function deleteNote(note) {
+  if (!confirm('Delete this note?')) return
+  try {
+    await noteApi.delete(note.id)
+    if (selectedNote.value?.id === note.id) selectedNote.value = null
+    await loadAllNotes()
+  } catch {}
 }
 
 watch(selectedNote, (n) => { if (n) { noteEditContent.value = n.content; autoSaveState.value = '' } })
