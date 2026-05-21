@@ -10,19 +10,20 @@
             <button @click="editFolder(null)" class="apple-btn text-xs py-1 px-2">+</button>
           </div>
           <div v-if="!folders.length" class="text-xs py-4 text-center" style="color:var(--fg-tertiary)">{{ t('adminNotes.noFolders') }}</div>
-          <div v-for="f in folders" :key="f.id" @click="selectedFolder=f.id" class="flex items-center justify-between px-2 py-1.5 rounded-lg cursor-pointer transition-colors mb-0.5" :style="selectedFolder===f.id?'background:var(--bg-sidebar-active);color:var(--accent)':'color:var(--fg-secondary)'" >
+          <div v-for="f in folders" :key="f.id" @click="selectedFolder=f.id" class="flex items-center justify-between px-2 py-1.5 rounded-lg cursor-pointer transition-colors mb-0.5" :style="selectedFolder===f.id?'background:var(--bg-sidebar-active);color:var(--accent)':'color:var(--fg-secondary)'">
             <span class="text-[13px] font-medium truncate">{{ f.name }}</span>
             <div class="flex gap-0.5">
               <button @click.stop="editFolder(f)" class="w-5 h-5 rounded flex items-center justify-center text-[10px] hover:opacity-60" style="color:var(--fg-tertiary)">✎</button>
-              <button @click.stop="deleteFolder(f)" class="w-5 h-5 rounded flex items-center justify-center text-[10px] hover:opacity-60" style="color:#FF3B30">✕</button>
+              <button @click.stop="confirmDeleteFolder(f)" class="w-5 h-5 rounded flex items-center justify-center text-[10px] hover:opacity-60" style="color:#FF3B30">✕</button>
             </div>
           </div>
         </div>
         <!-- Notes -->
         <div class="flex-1">
-          <div class="flex items-center justify-between mb-3">
-            <input v-model="search" :placeholder="t('adminNotes.search')" class="apple-input w-56" />
-            <button @click="editNote(null)" class="apple-btn text-xs">{{ t('adminNotes.addNote') }}</button>
+          <div class="flex items-center gap-2 mb-3">
+            <input v-model="search" :placeholder="t('adminNotes.search')" class="apple-input h-[34px]" style="width:224px" />
+            <div class="flex-1" />
+            <button @click="editNote(null)" class="apple-btn text-xs h-[34px] whitespace-nowrap">{{ t('adminNotes.addNote') }}</button>
           </div>
           <div class="apple-card overflow-hidden">
             <table class="apple-table">
@@ -36,7 +37,7 @@
                   <td style="color:var(--fg-tertiary)" class="whitespace-nowrap">{{ n.created_at }}</td>
                   <td class="text-right">
                     <button @click.stop="editNote(n)" class="apple-btn-secondary text-xs py-1 px-2 mr-1">{{ t('adminTools.edit') }}</button>
-                    <button @click.stop="deleteNote(n)" class="apple-btn-danger text-xs py-1 px-2">{{ t('adminTools.delete') }}</button>
+                    <button @click.stop="confirmDeleteNote(n)" class="apple-btn-danger text-xs py-1 px-2">{{ t('adminTools.delete') }}</button>
                   </td>
                 </tr>
                 <tr v-if="!filteredNotes.length"><td colspan="6" class="text-center py-12 text-sm" style="color:var(--fg-tertiary)">{{ t('adminNotes.noNotes') }}</td></tr>
@@ -102,7 +103,7 @@
 
       <!-- Note Detail Drawer -->
       <Transition name="drawer">
-        <div v-if="drawerNote" class="fixed top-0 right-0 bottom-0 w-96 bg-card border-l border-border overflow-y-auto z-[60] shadow-xl flex flex-col" style="background:var(--bg-card);border-color:var(--divider)">
+        <div v-if="drawerNote" class="fixed top-0 right-0 bottom-0 w-96 overflow-y-auto z-[60] shadow-xl flex flex-col" style="background:var(--bg-card);border-left:1px solid var(--divider)">
           <div class="flex items-center justify-between p-4" style="border-bottom:1px solid var(--divider)">
             <h3 class="text-[15px] font-semibold" style="color:var(--fg)">{{ drawerNote.title }}</h3>
             <button @click="drawerNote=null" class="w-6 h-6 rounded-full flex items-center justify-center text-xs hover:opacity-60" style="background:var(--bg-sidebar-hover);color:var(--fg-secondary)">✕</button>
@@ -120,12 +121,28 @@
           </div>
         </div>
       </Transition>
+
+      <!-- macOS Confirm Dialog -->
+      <Transition name="modal">
+        <div v-if="macDialog.show" class="mac-dialog-overlay">
+          <div class="mac-dialog-backdrop" @click="macDialog.show=false;macDialog.resolve(false)" />
+          <div class="mac-dialog">
+            <h4>{{ macDialog.title }}</h4>
+            <p>{{ macDialog.message }}</p>
+            <input v-if="macDialog.type==='prompt'" v-model="macDialog.inputVal" class="mac-dialog-input" :placeholder="macDialog.placeholder" @keyup.enter="macDialog.show=false;macDialog.resolve(macDialog.inputVal)" />
+            <div class="mac-dialog-actions">
+              <button class="mac-dialog-cancel" @click="macDialog.show=false;macDialog.resolve(macDialog.type==='prompt'?'':false)">{{ t('adminNotes.cancel') }}</button>
+              <button class="mac-dialog-ok" @click="macDialog.show=false;macDialog.resolve(macDialog.type==='prompt'?macDialog.inputVal:true)">{{ macDialog.okText || t('adminNotes.save') }}</button>
+            </div>
+          </div>
+        </div>
+      </Transition>
     </div>
   </MainLayout>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, reactive, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import MainLayout from '../components/MainLayout.vue'
 import { noteFolderApi, noteApi } from '../api'
@@ -151,6 +168,21 @@ const inlineNewFolder = ref(false)
 const newFolderName = ref('')
 
 const drawerNote = ref(null)
+
+// macOS dialog state
+const macDialog = reactive({ show: false, title: '', message: '', type: 'confirm', inputVal: '', placeholder: '', okText: '', resolve: () => {} })
+
+function macConfirm(title, message, okText) {
+  return new Promise(resolve => {
+    Object.assign(macDialog, { show: true, title, message, type: 'confirm', inputVal: '', placeholder: '', okText: okText || t('adminTools.delete'), resolve })
+  })
+}
+
+function macPrompt(title, message, placeholder, okText) {
+  return new Promise(resolve => {
+    Object.assign(macDialog, { show: true, title, message, type: 'prompt', inputVal: '', placeholder: placeholder || '', okText: okText || t('adminNotes.save'), resolve })
+  })
+}
 
 const filteredNotes = computed(() => {
   if (!search.value) return notes.value
@@ -184,8 +216,9 @@ async function saveFolder() {
   } catch {}
 }
 
-async function deleteFolder(f) {
-  if (!confirm(t('adminNotes.confirmDeleteFolder'))) return
+async function confirmDeleteFolder(f) {
+  const ok = await macConfirm(t('adminNotes.confirmDeleteFolder'), t('adminNotes.confirmDeleteFolder'))
+  if (!ok) return
   try { await noteFolderApi.delete(f.id); if (selectedFolder.value === f.id) selectedFolder.value = 0; fetchFolders(); fetchNotes() } catch {}
 }
 
@@ -199,7 +232,11 @@ async function saveNote() {
   } catch {}
 }
 
-async function deleteNote(n) { if (!confirm(t('adminNotes.confirmDelete'))) return; try { await noteApi.delete(n.id); fetchNotes() } catch {} }
+async function confirmDeleteNote(n) {
+  const ok = await macConfirm(t('adminNotes.confirmDelete'), t('adminNotes.confirmDelete'))
+  if (!ok) return
+  try { await noteApi.delete(n.id); fetchNotes() } catch {}
+}
 
 async function createInlineFolder() {
   if (!newFolderName.value) return

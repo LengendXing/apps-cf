@@ -52,6 +52,7 @@ export default {
     confirmDelete: '确认删除？', empty: '暂无分类', noCategory: '无分类',
     scripts: '脚本管理', addScript: '添加脚本', scriptName: '脚本名称',
     scriptContent: '脚本内容', scriptPlatform: '平台', scriptTags: '标签',
+    importBtn: '导入', exportBtn: '导出',
   },
   adminUsers: {
     title: '用户管理', username: '用户名', email: '邮箱', role: '角色', isActive: '状态', action: '操作',
@@ -66,6 +67,7 @@ export default {
     title: '配置管理', search: '搜索配置...', addConfig: '添加配置',
     configName: '配置名称', configFormat: '格式', configContent: '内容',
     editConfig: '编辑配置', save: '保存', cancel: '取消', confirmDelete: '确认删除？', copyCount: '复制次数',
+    importBtn: '导入', exportBtn: '导出', importDesc: '请选择 JSON 文件导入数据。文件格式如下：', chooseFile: '选择文件',
   },
   systemConfig: {
     title: '系统配置', menuLayout: '菜单布局', layoutLeft: '左侧边栏', layoutTop: '顶部导航',

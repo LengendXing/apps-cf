@@ -32,6 +32,7 @@ export default {
     confirmDelete: 'Confirm delete?', empty: 'No categories', noCategory: 'No category',
     scripts: 'Scripts', addScript: 'Add Script', scriptName: 'Script Name',
     scriptContent: 'Script Content', scriptPlatform: 'Platform', scriptTags: 'Tags',
+    importBtn: 'Import', exportBtn: 'Export',
   },
   adminUsers: {
     title: 'Users', username: 'Username', email: 'Email', role: 'Role', isActive: 'Status', action: 'Action',
@@ -46,6 +47,7 @@ export default {
     title: 'Configs', search: 'Search configs...', addConfig: 'Add Config',
     configName: 'Config Name', configFormat: 'Format', configContent: 'Content',
     editConfig: 'Edit Config', save: 'Save', cancel: 'Cancel', confirmDelete: 'Confirm delete?', copyCount: 'Copies',
+    importBtn: 'Import', exportBtn: 'Export', importDesc: 'Select a JSON file to import data. Format:', chooseFile: 'Choose File',
   },
   systemConfig: {
     title: 'System Config', menuLayout: 'Menu Layout', layoutLeft: 'Left Sidebar', layoutTop: 'Top Navigation',

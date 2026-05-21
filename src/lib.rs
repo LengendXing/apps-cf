@@ -958,6 +958,47 @@ async fn main(req: Request, env: Env, _ctx: Context) -> Result<Response> {
                 None => json_resp(&ApiResponse::err(1004, "Note not found"))
             }
         })
+        // --- Import/Export ---
+        .get_async("/api/export", |_req, env| async move {
+            let kv = env.kv("APPS_DATA")?;
+            let cats = kv_categories(&kv).await?;
+            let tools = kv_tools(&kv).await?;
+            let configs = kv_configs(&kv).await?;
+            json_resp(&ApiResponse::ok(serde_json::json!({"categories":cats,"tools":tools,"configs":configs})))
+        })
+        .post_async("/api/import", |mut req, env| async move {
+            let kv = env.kv("APPS_DATA")?;
+            let (_uid, _) = match get_auth_user(&req, &kv).await { Ok(v) => v, Err(_) => return json_resp_auth(&ApiResponse::err(1001, "Unauthorized")) };
+            let body: serde_json::Value = req.json().await?;
+            if let Some(cats) = body.get("categories").and_then(|v|v.as_array()) {
+                let mut existing = kv_categories(&kv).await?;
+                for c in cats {
+                    if let Ok(cat) = serde_json::from_value::<Category>(c.clone()) {
+                        if !existing.iter().any(|e|e.name==cat.name) { existing.push(cat); }
+                    }
+                }
+                kv.put("categories", &existing)?.execute().await?;
+            }
+            if let Some(tls) = body.get("tools").and_then(|v|v.as_array()) {
+                let mut existing = kv_tools(&kv).await?;
+                for tl in tls {
+                    if let Ok(tool) = serde_json::from_value::<Tool>(tl.clone()) {
+                        if !existing.iter().any(|e|e.name==tool.name) { existing.push(tool); }
+                    }
+                }
+                kv.put("tools", &existing)?.execute().await?;
+            }
+            if let Some(cfgs) = body.get("configs").and_then(|v|v.as_array()) {
+                let mut existing = kv_configs(&kv).await?;
+                for c in cfgs {
+                    if let Ok(cfg) = serde_json::from_value::<Config>(c.clone()) {
+                        if !existing.iter().any(|e|e.name==cfg.name) { existing.push(cfg); }
+                    }
+                }
+                kv.put("configs", &existing)?.execute().await?;
+            }
+            json_resp(&ApiResponse::ok(serde_json::json!({"imported":true})))
+        })
         // --- SPA Fallback ---
         .get_async("/*path", |_req, _env| async move {
             build_resp(Some(INDEX_HTML), 200, &[("Content-Type","text/html; charset=utf-8")])

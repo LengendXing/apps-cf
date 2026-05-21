@@ -6,53 +6,8 @@
         <div class="flex gap-2">
           <button @click="editCategory(null)" class="apple-btn-secondary text-xs">{{ t('adminTools.addCategory') }}</button>
           <button @click="editTool(null)" class="apple-btn text-xs">{{ t('adminTools.addTool') }}</button>
-        </div>
-      </div>
-
-      <!-- Category Form -->
-      <div v-if="showCatForm" class="apple-card p-5 mb-6">
-        <h3 class="text-[15px] font-semibold mb-3" style="color:var(--fg)">{{ editingCat ? t('adminTools.editCategory') : t('adminTools.categoryForm') }}</h3>
-        <div class="flex gap-3 items-end">
-          <div class="flex-1"><label class="text-xs block mb-1" style="color:var(--fg-secondary)">{{ t('adminTools.categoryName') }}</label><input v-model="catForm.name" class="apple-input" /></div>
-          <div class="w-24"><label class="text-xs block mb-1" style="color:var(--fg-secondary)">{{ t('adminTools.icon') }}</label><input v-model="catForm.icon" class="apple-input" /></div>
-          <div class="w-20"><label class="text-xs block mb-1" style="color:var(--fg-secondary)">{{ t('adminTools.sortOrder') }}</label><input v-model.number="catForm.sort_order" type="number" class="apple-input" /></div>
-          <button @click="saveCategory" class="apple-btn text-xs">{{ t('adminTools.save') }}</button>
-          <button @click="showCatForm = false" class="apple-btn-secondary text-xs">{{ t('adminTools.cancel') }}</button>
-        </div>
-      </div>
-
-      <!-- Tool Form -->
-      <div v-if="showToolForm" class="apple-card p-5 mb-6">
-        <h3 class="text-[15px] font-semibold mb-4" style="color:var(--fg)">{{ editingTool ? t('adminTools.editTool') : t('adminTools.toolForm') }}</h3>
-        <div class="grid grid-cols-2 gap-3">
-          <div><label class="text-xs block mb-1" style="color:var(--fg-secondary)">{{ t('adminTools.toolName') }}</label><input v-model="toolForm.name" class="apple-input" /></div>
-          <div><label class="text-xs block mb-1" style="color:var(--fg-secondary)">{{ t('adminTools.categoryName') }}</label><select v-model="toolForm.category_id" class="apple-select w-full"><option :value="0">{{ t('adminTools.noCategory') }}</option><option v-for="c in categories" :key="c.id" :value="c.id">{{ c.name }}</option></select></div>
-          <div class="col-span-2"><label class="text-xs block mb-1" style="color:var(--fg-secondary)">{{ t('adminTools.toolUrl') }}</label><input v-model="toolForm.url" class="apple-input" /></div>
-          <div><label class="text-xs block mb-1" style="color:var(--fg-secondary)">{{ t('adminTools.icon') }}</label><input v-model="toolForm.icon" class="apple-input" /></div>
-          <div><label class="text-xs block mb-1" style="color:var(--fg-secondary)">{{ t('adminTools.description') }}</label><input v-model="toolForm.description" class="apple-input" /></div>
-          <div><label class="text-xs block mb-1" style="color:var(--fg-secondary)">{{ t('adminTools.tags') }}</label><input v-model="toolForm.tagsStr" placeholder="tag1,tag2" class="apple-input" /></div>
-          <div><label class="text-xs block mb-1" style="color:var(--fg-secondary)">{{ t('adminTools.platforms') }}</label><input v-model="toolForm.platformsStr" placeholder="mac,windows" class="apple-input" /></div>
-        </div>
-        <div class="mt-4">
-          <div class="flex items-center justify-between mb-2">
-            <label class="text-xs font-semibold" style="color:var(--fg)">{{ t('adminTools.versions') }}</label>
-            <button @click="toolForm.versions.push({ version: '', url: '' })" class="apple-btn-secondary text-xs py-0.5 px-2">{{ t('adminTools.addVersion') }}</button>
-          </div>
-          <div v-for="(v, i) in toolForm.versions" :key="i" class="flex gap-2 items-center mb-2">
-            <span class="text-xs w-4 text-right" style="color:var(--fg-tertiary)">{{ i+1 }}</span>
-            <input v-model="v.version" class="apple-input w-32" />
-            <input v-model="v.url" class="apple-input flex-1" />
-            <button @click="toolForm.versions.splice(i,1)" class="apple-btn-danger text-xs py-0.5 px-2">✕</button>
-          </div>
-        </div>
-        <div class="flex items-center gap-4 mt-4">
-          <label class="flex items-center gap-2 text-[13px] cursor-pointer" style="color:var(--fg)">
-            <input v-model="toolForm.is_featured" type="checkbox" class="w-4 h-4 rounded accent-[var(--accent)]" /> {{ t('adminTools.featured') }}
-          </label>
-          <div><label class="text-xs mr-1" style="color:var(--fg-secondary)">{{ t('adminTools.sortOrder') }}</label><input v-model.number="toolForm.sort_order" type="number" class="apple-input w-20" /></div>
-          <div class="flex-1" />
-          <button @click="saveTool" class="apple-btn text-xs">{{ t('adminTools.save') }}</button>
-          <button @click="showToolForm = false" class="apple-btn-secondary text-xs">{{ t('adminTools.cancel') }}</button>
+          <button @click="doExport" class="apple-btn-secondary text-xs">{{ t('adminTools.exportBtn') }}</button>
+          <label class="apple-btn-warn text-xs cursor-pointer">{{ t('adminTools.importBtn') }}<input type="file" accept=".json" class="hidden" @change="doImport" /></label>
         </div>
       </div>
 
@@ -62,7 +17,7 @@
           <h3 class="text-[15px] font-semibold" style="color:var(--fg)">{{ cat.icon }} {{ cat.name }}</h3>
           <span class="text-xs" style="color:var(--fg-tertiary)">({{ getToolsByCat(cat.id).length }})</span>
           <button @click="editCategory(cat)" class="text-xs ml-2 hover:opacity-60" style="color:var(--accent)">{{ t('adminTools.edit') }}</button>
-          <button @click="deleteCategory(cat)" class="text-xs hover:opacity-60" style="color:#FF3B30">{{ t('adminTools.delete') }}</button>
+          <button @click="confirmDeleteCategory(cat)" class="text-xs hover:opacity-60" style="color:#FF3B30">{{ t('adminTools.delete') }}</button>
         </div>
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
           <div v-for="tool in getToolsByCat(cat.id)" :key="tool.id" class="apple-card p-4 hover:shadow-apple-md transition-shadow">
@@ -77,10 +32,9 @@
               </div>
               <div class="flex gap-1 flex-shrink-0">
                 <button @click="editTool(tool)" class="text-xs hover:opacity-60" style="color:var(--accent)">{{ t('adminTools.edit') }}</button>
-                <button @click="deleteTool(tool)" class="text-xs hover:opacity-60" style="color:#FF3B30">{{ t('adminTools.delete') }}</button>
+                <button @click="confirmDeleteTool(tool)" class="text-xs hover:opacity-60" style="color:#FF3B30">{{ t('adminTools.delete') }}</button>
               </div>
             </div>
-            <!-- Scripts for this tool -->
             <div v-if="getScriptsForTool(tool.id).length" class="mt-2 pt-2" style="border-top:1px solid var(--divider)">
               <div class="flex items-center justify-between mb-1">
                 <span class="text-[11px] font-semibold uppercase tracking-wide" style="color:var(--fg-tertiary)">{{ t('adminTools.scripts') }}</span>
@@ -91,7 +45,7 @@
                 <span v-if="s.platform" class="text-[10px] px-1.5 rounded" style="background:var(--bg-sidebar-active);color:var(--accent)">{{ s.platform }}</span>
                 <div class="flex-1" />
                 <button @click="editScript(s, tool.id)" class="text-[11px] hover:opacity-60" style="color:var(--accent)">{{ t('adminTools.edit') }}</button>
-                <button @click="deleteScript(s)" class="text-[11px] hover:opacity-60" style="color:#FF3B30">{{ t('adminTools.delete') }}</button>
+                <button @click="confirmDeleteScript(s)" class="text-[11px] hover:opacity-60" style="color:#FF3B30">{{ t('adminTools.delete') }}</button>
               </div>
             </div>
             <div v-else class="mt-2 pt-2 flex items-center justify-between" style="border-top:1px solid var(--divider)">
@@ -102,6 +56,81 @@
         </div>
       </div>
       <p v-if="!categories.length" class="text-center py-16 text-sm" style="color:var(--fg-tertiary)">{{ t('adminTools.empty') }}</p>
+
+      <!-- Category Modal -->
+      <Transition name="modal">
+        <div v-if="showCatModal" class="fixed inset-0 z-50 flex items-center justify-center">
+          <div class="absolute inset-0 bg-black/30 backdrop-blur-sm" @click="showCatModal=false" />
+          <div class="relative w-full max-w-md rounded-apple-xl overflow-hidden" style="background:var(--bg-card);box-shadow:0 24px 80px rgba(0,0,0,0.25)">
+            <div class="px-6 py-4" style="border-bottom:1px solid var(--divider)">
+              <h3 class="text-[15px] font-semibold" style="color:var(--fg)">{{ editingCat ? t('adminTools.editCategory') : t('adminTools.categoryForm') }}</h3>
+            </div>
+            <div class="p-6 space-y-4">
+              <div><label class="text-xs block mb-1" style="color:var(--fg-secondary)">{{ t('adminTools.categoryName') }}</label><input v-model="catForm.name" class="apple-input" /></div>
+              <div><label class="text-xs block mb-1" style="color:var(--fg-secondary)">{{ t('adminTools.icon') }}</label><input v-model="catForm.icon" class="apple-input" /></div>
+              <div><label class="text-xs block mb-1" style="color:var(--fg-secondary)">{{ t('adminTools.sortOrder') }}</label><input v-model.number="catForm.sort_order" type="number" class="apple-input" /></div>
+            </div>
+            <div class="flex justify-end gap-2 px-6 py-4" style="border-top:1px solid var(--divider)">
+              <button @click="showCatModal=false" class="apple-btn-secondary">{{ t('adminTools.cancel') }}</button>
+              <button @click="saveCategory" class="apple-btn">{{ t('adminTools.save') }}</button>
+            </div>
+          </div>
+        </div>
+      </Transition>
+
+      <!-- Tool Modal -->
+      <Transition name="modal">
+        <div v-if="showToolModal" class="fixed inset-0 z-50 flex items-center justify-center">
+          <div class="absolute inset-0 bg-black/30 backdrop-blur-sm" @click="showToolModal=false" />
+          <div class="relative w-full max-w-2xl max-h-[85vh] flex flex-col rounded-apple-xl overflow-hidden" style="background:var(--bg-card);box-shadow:0 24px 80px rgba(0,0,0,0.25)">
+            <div class="px-6 py-4" style="border-bottom:1px solid var(--divider)">
+              <h3 class="text-[15px] font-semibold" style="color:var(--fg)">{{ editingTool ? t('adminTools.editTool') : t('adminTools.toolForm') }}</h3>
+            </div>
+            <div class="flex-1 overflow-y-auto p-6 space-y-4">
+              <div class="grid grid-cols-2 gap-3">
+                <div><label class="text-xs block mb-1" style="color:var(--fg-secondary)">{{ t('adminTools.toolName') }}</label><input v-model="toolForm.name" class="apple-input" /></div>
+                <div><label class="text-xs block mb-1" style="color:var(--fg-secondary)">{{ t('adminTools.categoryName') }}</label><select v-model="toolForm.category_id" class="apple-select w-full"><option :value="0">{{ t('adminTools.noCategory') }}</option><option v-for="c in categories" :key="c.id" :value="c.id">{{ c.name }}</option></select></div>
+                <div class="col-span-2"><label class="text-xs block mb-1" style="color:var(--fg-secondary)">{{ t('adminTools.toolUrl') }}</label><input v-model="toolForm.url" class="apple-input" /></div>
+                <div><label class="text-xs block mb-1" style="color:var(--fg-secondary)">{{ t('adminTools.icon') }}</label><input v-model="toolForm.icon" class="apple-input" /></div>
+                <div><label class="text-xs block mb-1" style="color:var(--fg-secondary)">{{ t('adminTools.description') }}</label><input v-model="toolForm.description" class="apple-input" /></div>
+                <div><label class="text-xs block mb-1" style="color:var(--fg-secondary)">{{ t('adminTools.tags') }}</label><input v-model="toolForm.tagsStr" placeholder="tag1,tag2" class="apple-input" /></div>
+                <div><label class="text-xs block mb-1" style="color:var(--fg-secondary)">{{ t('adminTools.platforms') }}</label><input v-model="toolForm.platformsStr" placeholder="mac,windows" class="apple-input" /></div>
+              </div>
+              <!-- Versions with hierarchy -->
+              <div>
+                <div class="flex items-center justify-between mb-2">
+                  <label class="text-xs font-semibold" style="color:var(--fg)">{{ t('adminTools.versions') }}</label>
+                  <button @click="toolForm.versions.push({ version: '', url: '' })" class="apple-btn-secondary text-xs py-0.5 px-2">{{ t('adminTools.addVersion') }}</button>
+                </div>
+                <div v-for="(v, i) in toolForm.versions" :key="i" class="mb-3 p-3 rounded-lg" style="background:var(--bg-sidebar-hover);border:1px solid var(--border)">
+                  <div class="flex items-center gap-2 mb-2">
+                    <span class="text-xs font-semibold w-5 text-center rounded" style="background:var(--accent);color:#fff">{{ i+1 }}</span>
+                    <label class="text-[11px] font-medium" style="color:var(--fg-secondary)">{{ t('adminTools.versionNumber') }}</label>
+                    <input v-model="v.version" class="apple-input flex-1" placeholder="1.0.0" />
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <svg class="w-3.5 h-3.5 flex-shrink-0 ml-5" style="color:var(--fg-tertiary)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="7 13 17 3 21 7 11 17z"/></svg>
+                    <label class="text-[11px] font-medium" style="color:var(--fg-secondary)">{{ t('adminTools.versionUrl') }}</label>
+                    <input v-model="v.url" class="apple-input flex-1" placeholder="https://..." />
+                    <button @click="toolForm.versions.splice(i,1)" class="apple-btn-danger text-xs py-0.5 px-2">{{ t('adminTools.removeVersion') }}</button>
+                  </div>
+                </div>
+                <div v-if="!toolForm.versions.length" class="text-xs py-2 text-center rounded-lg" style="color:var(--fg-tertiary);background:var(--bg-sidebar-hover)">No versions added</div>
+              </div>
+              <div class="flex items-center gap-4">
+                <label class="flex items-center gap-2 text-[13px] cursor-pointer" style="color:var(--fg)">
+                  <input v-model="toolForm.is_featured" type="checkbox" class="w-4 h-4 rounded accent-[var(--accent)]" /> {{ t('adminTools.featured') }}
+                </label>
+                <div><label class="text-xs mr-1" style="color:var(--fg-secondary)">{{ t('adminTools.sortOrder') }}</label><input v-model.number="toolForm.sort_order" type="number" class="apple-input w-20" /></div>
+              </div>
+            </div>
+            <div class="flex justify-end gap-2 px-6 py-4" style="border-top:1px solid var(--divider)">
+              <button @click="showToolModal=false" class="apple-btn-secondary">{{ t('adminTools.cancel') }}</button>
+              <button @click="saveTool" class="apple-btn">{{ t('adminTools.save') }}</button>
+            </div>
+          </div>
+        </div>
+      </Transition>
 
       <!-- Script Form Modal -->
       <Transition name="modal">
@@ -125,29 +154,59 @@
           </div>
         </div>
       </Transition>
+
+      <!-- macOS Confirm Dialog -->
+      <Transition name="modal">
+        <div v-if="macDialog.show" class="mac-dialog-overlay">
+          <div class="mac-dialog-backdrop" @click="macDialog.show=false;macDialog.resolve(false)" />
+          <div class="mac-dialog">
+            <h4>{{ macDialog.title }}</h4>
+            <p>{{ macDialog.message }}</p>
+            <div class="mac-dialog-actions">
+              <button class="mac-dialog-cancel" @click="macDialog.show=false;macDialog.resolve(false)">{{ t('adminTools.cancel') }}</button>
+              <button class="mac-dialog-ok" style="background:#FF3B30" @click="macDialog.show=false;macDialog.resolve(true)">{{ t('adminTools.delete') }}</button>
+            </div>
+          </div>
+        </div>
+      </Transition>
     </div>
   </MainLayout>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, reactive, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import MainLayout from '../components/MainLayout.vue'
-import { categoryApi, toolApi, scriptApi } from '../api'
+import { categoryApi, toolApi, scriptApi, importExportApi } from '../api'
 
 const { t } = useI18n()
 const categories = ref([])
 const tools = ref([])
-const showCatForm = ref(false)
-const showToolForm = ref(false)
-const editingCat = ref(null)
-const editingTool = ref(null)
-const catForm = ref({ name: '', icon: '', sort_order: 0 })
-const toolForm = ref(defaultTool())
 const scripts = ref([])
+
+// Category modal
+const showCatModal = ref(false)
+const editingCat = ref(null)
+const catForm = ref({ name: '', icon: '', sort_order: 0 })
+
+// Tool modal
+const showToolModal = ref(false)
+const editingTool = ref(null)
+const toolForm = ref(defaultTool())
+
+// Script modal
 const showScriptForm = ref(false)
 const editingScript = ref(null)
 const scriptForm = ref({ tool_id: 0, name: '', content: '', platform: '', tagsStr: '', sort_order: 0 })
+
+// macOS dialog
+const macDialog = reactive({ show: false, title: '', message: '', resolve: () => {} })
+
+function macConfirm(title, message) {
+  return new Promise(resolve => {
+    Object.assign(macDialog, { show: true, title, message, resolve })
+  })
+}
 
 function defaultTool() { return { name: '', category_id: 0, url: '', icon: '', description: '', is_featured: false, sort_order: 0, tagsStr: '', platformsStr: '', versions: [] } }
 function isUrl(s) { return s && (s.startsWith('http://') || s.startsWith('https://')) }
@@ -167,17 +226,18 @@ async function fetch() {
 function editCategory(cat) {
   editingCat.value = cat || null
   catForm.value = cat ? { name: cat.name, icon: cat.icon, sort_order: cat.sort_order || 0 } : { name: '', icon: '', sort_order: 0 }
-  showCatForm.value = true
+  showCatModal.value = true
 }
 
 async function saveCategory() {
   if (!catForm.value.name) return
-  try { if (editingCat.value) await categoryApi.update(editingCat.value.id, catForm.value); else await categoryApi.create(catForm.value); showCatForm.value = false; fetch() } catch (e) { alert(e.response?.data?.detail || 'Error') }
+  try { if (editingCat.value) await categoryApi.update(editingCat.value.id, catForm.value); else await categoryApi.create(catForm.value); showCatModal.value = false; fetch() } catch (e) { alert(e.response?.data?.detail || 'Error') }
 }
 
-async function deleteCategory(cat) {
-  if (!confirm(t('adminTools.confirmDelete'))) return
-  try { await categoryApi.delete(cat.id); fetch() } catch (e) { alert(e.response?.data?.detail || 'Error') }
+async function confirmDeleteCategory(cat) {
+  const ok = await macConfirm(t('adminTools.confirmDelete'), t('adminTools.confirmDelete'))
+  if (!ok) return
+  try { await categoryApi.delete(cat.id); fetch() } catch {}
 }
 
 function editTool(tool) {
@@ -185,17 +245,18 @@ function editTool(tool) {
   if (tool) {
     toolForm.value = { name: tool.name, category_id: tool.category_id, url: tool.url, icon: tool.icon, description: tool.description, is_featured: tool.is_featured, sort_order: tool.sort_order || 0, tagsStr: (tool.tags || []).join(','), platformsStr: (tool.platforms || []).join(','), versions: (tool.versions || []).map(v => ({ version: v.version || '', url: v.url || '' })) }
   } else { toolForm.value = defaultTool() }
-  showToolForm.value = true
+  showToolModal.value = true
 }
 
 async function saveTool() {
   if (!toolForm.value.name) return
   const data = { name: toolForm.value.name, category_id: toolForm.value.category_id, url: toolForm.value.url, icon: toolForm.value.icon, description: toolForm.value.description, is_featured: toolForm.value.is_featured, sort_order: toolForm.value.sort_order, tags: toolForm.value.tagsStr ? toolForm.value.tagsStr.split(',').map(s => s.trim()).filter(Boolean) : [], platforms: toolForm.value.platformsStr ? toolForm.value.platformsStr.split(',').map(s => s.trim()).filter(Boolean) : [], versions: toolForm.value.versions.filter(v => v.version.trim()).map(v => ({ version: v.version.trim(), url: v.url.trim() })) }
-  try { if (editingTool.value) await toolApi.update(editingTool.value.id, data); else await toolApi.create(data); showToolForm.value = false; fetch() } catch (e) { alert(e.response?.data?.detail || 'Error') }
+  try { if (editingTool.value) await toolApi.update(editingTool.value.id, data); else await toolApi.create(data); showToolModal.value = false; fetch() } catch (e) { alert(e.response?.data?.detail || 'Error') }
 }
 
-async function deleteTool(tool) {
-  if (!confirm(t('adminTools.confirmDelete'))) return
+async function confirmDeleteTool(tool) {
+  const ok = await macConfirm(t('adminTools.confirmDelete'), t('adminTools.confirmDelete'))
+  if (!ok) return
   try { await toolApi.delete(tool.id); fetch() } catch {}
 }
 
@@ -213,8 +274,31 @@ async function saveScript() {
   try { if (editingScript.value) await scriptApi.update(editingScript.value.id, data); else await scriptApi.create(data); showScriptForm.value = false; fetch() } catch {}
 }
 
-async function deleteScript(s) {
-  if (!confirm(t('adminTools.confirmDelete'))) return
+async function confirmDeleteScript(s) {
+  const ok = await macConfirm(t('adminTools.confirmDelete'), t('adminTools.confirmDelete'))
+  if (!ok) return
   try { await scriptApi.delete(s.id); fetch() } catch {}
+}
+
+async function doExport() {
+  try {
+    const res = await importExportApi.exportAll()
+    const blob = new Blob([JSON.stringify(res.data, null, 2)], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a'); a.href = url; a.download = 'apps-export.json'; a.click()
+    URL.revokeObjectURL(url)
+  } catch {}
+}
+
+async function doImport(event) {
+  const file = event.target.files?.[0]
+  if (!file) return
+  try {
+    const text = await file.text()
+    const data = JSON.parse(text)
+    await importExportApi.importAll(data)
+    fetch()
+  } catch (e) { alert('Import failed: ' + (e.message || 'Invalid JSON')) }
+  event.target.value = ''
 }
 </script>

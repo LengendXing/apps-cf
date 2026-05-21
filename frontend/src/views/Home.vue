@@ -19,6 +19,8 @@
       <div class="max-w-[1400px] mx-auto h-full flex items-center justify-between px-3">
         <span class="text-sm font-bold tracking-tight" style="color:var(--foreground)">APPS</span>
         <div class="flex items-center gap-2">
+          <!-- Loading spinner -->
+          <div v-if="isLoading" class="mac-spinner" style="width:16px;height:16px;border-width:2px" />
           <!-- Notes button -->
           <button @click="viewMode = viewMode==='notes'?'app':'notes'" class="p-1.5 rounded-lg transition-colors hover:opacity-70" :style="viewMode==='notes'?'background:var(--foreground);color:var(--background)':'color:var(--muted-foreground)'" title="Notes">
             <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
@@ -57,29 +59,34 @@
               <svg class="w-3.5 h-3.5 transition-transform" :style="openFolders.has(folder.id)?'transform:rotate(90deg)':''" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5l8 7-8 7z"/></svg>
               <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
               <span class="truncate flex-1">{{ folder.name }}</span>
-              <button @click.stop="deleteFolder(folder)" class="text-[10px] hover:opacity-60" style="color:#FF3B30">✕</button>
+              <button @click.stop="confirmDeleteFolder(folder)" class="text-[10px] hover:opacity-60" style="color:#FF3B30">✕</button>
             </div>
             <div v-if="openFolders.has(folder.id)" class="ml-4 space-y-0.5">
               <div v-for="n in folderNotes(folder.id)" :key="n.id" @click="selectedNote=n" class="flex items-center gap-1 px-2 py-1 rounded-lg cursor-pointer text-xs truncate transition-colors" :style="selectedNote?.id===n.id?'background:var(--foreground);color:var(--background)':'color:var(--muted-foreground)'">
                 <span class="truncate flex-1">{{ n.title }}</span>
-                <button @click.stop="deleteNote(n)" class="text-[10px] hover:opacity-60" style="color:#FF3B30">✕</button>
+                <button @click.stop="confirmDeleteNote(n)" class="text-[10px] hover:opacity-60" style="color:#FF3B30">✕</button>
               </div>
-              <button @click="createNoteInFolder(folder.id)" class="px-2 py-0.5 text-[11px] hover:opacity-60" style="color:var(--foreground)">+ {{ t('home.newNote') }}</button>
+              <button @click="promptNewNote(folder.id)" class="px-2 py-0.5 text-[11px] hover:opacity-60" style="color:var(--foreground)">+ {{ t('home.newNote') }}</button>
             </div>
           </div>
           <div v-if="!noteFolders.length" class="text-xs text-center py-8" style="color:var(--muted-foreground)">{{ t('home.noFolders') }}</div>
         </aside>
         <main class="flex-1 flex flex-col overflow-hidden">
           <div v-if="selectedNote" class="flex-1 flex flex-col">
-            <div class="flex items-center justify-between px-4 py-2" style="border-bottom:1px solid var(--border-color)">
+            <div class="flex items-center px-4 py-2" style="border-bottom:1px solid var(--border-color)">
               <input v-model="selectedNote.title" class="text-sm font-medium outline-none flex-1" style="background:transparent;color:var(--foreground)" @input="onNoteInput" />
-              <span class="text-xs flex items-center gap-1" :style="autoSaveState==='saving'?'color:var(--muted-foreground)':'color:#34C759'">
-                <svg v-if="autoSaveState==='saving'" class="w-3 h-3 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v4m0 12v4m-7.07-3.93l2.83-2.83m8.48-8.48l2.83-2.83M2 12h4m12 0h4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83"/></svg>
-                <svg v-else-if="autoSaveState==='saved'" class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
-                {{ autoSaveState==='saving'?t('home.saving'):autoSaveState==='saved'?t('home.saved'):'' }}
-              </span>
+              <button @click="manualSave" class="ml-2 px-3 py-1 rounded-lg text-xs font-medium transition-opacity hover:opacity-80" :style="autoSaveState==='saving'?'background:var(--muted-foreground);color:var(--background)':'background:var(--foreground);color:var(--background)'">
+                <span v-if="autoSaveState==='saving'" class="flex items-center gap-1"><span class="mac-spinner" style="width:10px;height:10px;border-width:1.5px" /> {{ t('home.saving') }}</span>
+                <span v-else-if="autoSaveState==='saved'" style="color:#34C759">✓ {{ t('home.saved') }}</span>
+                <span v-else>{{ t('home.saved') }}</span>
+              </button>
             </div>
-            <textarea v-model="noteEditContent" class="flex-1 w-full p-4 resize-none text-sm font-mono leading-relaxed outline-none" style="background:var(--background);color:var(--foreground)" @input="onNoteInput"></textarea>
+            <div class="note-editor-wrap">
+              <div class="note-line-numbers" ref="lineNumbersEl">
+                <div v-for="i in lineCount" :key="i">{{ i }}</div>
+              </div>
+              <textarea ref="noteEditorEl" v-model="noteEditContent" class="note-editor-content" @input="onNoteInput" @scroll="syncScroll"></textarea>
+            </div>
           </div>
           <div v-else class="flex-1 flex items-center justify-center text-sm" style="color:var(--muted-foreground)">{{ t('home.noNotes') }}</div>
         </main>
@@ -102,7 +109,12 @@
               <input v-model="search" :placeholder="t('home.search')" class="w-full max-w-md px-4 py-2 rounded-xl border text-sm outline-none" style="background:var(--background);border-color:var(--border-color);color:var(--foreground)" />
             </div>
             <template v-if="viewMode==='app'">
-              <div v-if="filtered.length" class="grid grid-cols-7 gap-3">
+              <!-- Skeleton loading -->
+              <div v-if="loading" class="grid grid-cols-7 gap-3">
+                <div v-for="i in 14" :key="i" class="skeleton skeleton-card rounded-xl"><div class="skeleton-text"></div></div>
+              </div>
+              <!-- Tool grid -->
+              <div v-else-if="filtered.length" class="grid grid-cols-7 gap-3">
                 <div v-for="tool in filtered" :key="tool.id" class="group aspect-square rounded-xl p-3 flex flex-col items-center justify-center gap-2 transition-all cursor-pointer relative" style="background:var(--card);border:1px solid var(--border-color)">
                   <button @click.stop="openInfo(tool)" class="absolute top-2 right-2 w-5 h-5 rounded-full flex items-center justify-center text-[10px] transition-colors z-10" style="background:var(--muted);color:var(--muted-foreground)" title="Detail">i</button>
                   <a :href="tool.url" target="_blank" @click.stop class="flex flex-col items-center justify-center gap-2 w-full h-full no-underline" style="color:var(--foreground)">
@@ -114,11 +126,13 @@
                   </a>
                 </div>
               </div>
-              <p v-else-if="loading" class="text-center py-20 text-sm" style="color:var(--muted-foreground)">Loading...</p>
               <p v-else class="text-center py-20 text-sm" style="color:var(--muted-foreground)">{{ t('home.empty') }}</p>
             </template>
             <template v-else>
-              <div v-if="filtered.length" class="grid grid-cols-7 gap-3">
+              <div v-if="loading" class="grid grid-cols-7 gap-3">
+                <div v-for="i in 14" :key="i" class="skeleton skeleton-card rounded-xl"><div class="skeleton-text"></div></div>
+              </div>
+              <div v-else-if="filtered.length" class="grid grid-cols-7 gap-3">
                 <div v-for="tool in filtered" :key="tool.id" @click="openConfigs(tool)" class="group aspect-square rounded-xl p-3 flex flex-col items-center justify-center gap-2 transition-all cursor-pointer" style="background:var(--card);border:1px solid var(--border-color)">
                   <div class="flex flex-col items-center justify-center gap-2 w-full h-full">
                     <div class="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform overflow-hidden" style="background:var(--muted)">
@@ -217,6 +231,22 @@
         </div>
       </div>
     </Transition>
+
+    <!-- macOS Confirm/Prompt Dialog -->
+    <Transition name="modal">
+      <div v-if="macDialog.show" class="mac-dialog-overlay">
+        <div class="mac-dialog-backdrop" @click="macDialog.show=false;macDialog.resolve(macDialog.type==='prompt'?'':false)" />
+        <div class="mac-dialog">
+          <h4>{{ macDialog.title }}</h4>
+          <p>{{ macDialog.message }}</p>
+          <input v-if="macDialog.type==='prompt'" v-model="macDialog.inputVal" class="mac-dialog-input" :placeholder="macDialog.placeholder" @keyup.enter="macDialog.show=false;macDialog.resolve(macDialog.inputVal)" />
+          <div class="mac-dialog-actions">
+            <button class="mac-dialog-cancel" @click="macDialog.show=false;macDialog.resolve(macDialog.type==='prompt'?'':false)">{{ t('adminTools.cancel') }}</button>
+            <button class="mac-dialog-ok" @click="macDialog.show=false;macDialog.resolve(macDialog.type==='prompt'?macDialog.inputVal:true)">OK</button>
+          </div>
+        </div>
+      </div>
+    </Transition>
   </div>
 </template>
 
@@ -235,6 +265,7 @@ const tools = ref([])
 const selectedCat = ref(0)
 const search = ref('')
 const loading = ref(false)
+const isLoading = ref(false)
 const viewMode = ref('app')
 const infoTool = ref(null)
 const infoTab = ref('info')
@@ -252,6 +283,28 @@ const autoSaveState = ref('')
 let autoSaveTimer = null
 const showNewFolderInput = ref(false)
 const newFolderName = ref('')
+const noteEditorEl = ref(null)
+const lineNumbersEl = ref(null)
+
+// macOS dialog
+const macDialog = ref({ show: false, title: '', message: '', type: 'confirm', inputVal: '', placeholder: '', resolve: () => {} })
+
+function macConfirm(title, message) {
+  return new Promise(resolve => {
+    macDialog.value = { show: true, title, message, type: 'confirm', inputVal: '', placeholder: '', resolve }
+  })
+}
+
+function macPrompt(title, message, placeholder) {
+  return new Promise(resolve => {
+    macDialog.value = { show: true, title, message, type: 'prompt', inputVal: '', placeholder: placeholder || '', resolve }
+  })
+}
+
+const lineCount = computed(() => {
+  if (!noteEditContent.value) return 1
+  return noteEditContent.value.split('\n').length
+})
 
 function isUrl(s) { return s && (s.startsWith('http://') || s.startsWith('https://')) }
 
@@ -275,6 +328,13 @@ function toggleLocale() {
   const next = locale.value === 'zh' ? 'en' : 'zh'
   locale.value = next
   localStorage.setItem('locale', next)
+}
+
+function withLoading(fn) {
+  return async (...args) => {
+    isLoading.value = true
+    try { await fn(...args) } finally { isLoading.value = false }
+  }
 }
 
 async function verifyPassword() {
@@ -321,7 +381,8 @@ async function copyConfig(c) {
 
 // Notes functions
 async function loadNoteFolders() {
-  try { const res = await noteFolderApi.list(); noteFolders.value = res.data || [] } catch { noteFolders.value = [] }
+  isLoading.value = true
+  try { const res = await noteFolderApi.list(); noteFolders.value = res.data || [] } catch { noteFolders.value = [] } finally { isLoading.value = false }
 }
 
 async function loadAllNotes() {
@@ -340,14 +401,29 @@ function onNoteInput() {
   autoSaveState.value = ''
   if (autoSaveTimer) clearTimeout(autoSaveTimer)
   autoSaveTimer = setTimeout(async () => {
-    autoSaveState.value = 'saving'
-    try {
-      await noteApi.update(selectedNote.value.id, { title: selectedNote.value.title, content: noteEditContent.value })
-      selectedNote.value.content = noteEditContent.value
-      autoSaveState.value = 'saved'
-      setTimeout(() => { autoSaveState.value = '' }, 2000)
-    } catch { autoSaveState.value = '' }
+    await doSave()
   }, 5000)
+}
+
+async function doSave() {
+  autoSaveState.value = 'saving'
+  try {
+    await noteApi.update(selectedNote.value.id, { title: selectedNote.value.title, content: noteEditContent.value })
+    selectedNote.value.content = noteEditContent.value
+    autoSaveState.value = 'saved'
+    setTimeout(() => { autoSaveState.value = '' }, 2000)
+  } catch { autoSaveState.value = '' }
+}
+
+async function manualSave() {
+  if (autoSaveTimer) clearTimeout(autoSaveTimer)
+  await doSave()
+}
+
+function syncScroll() {
+  if (lineNumbersEl.value && noteEditorEl.value) {
+    lineNumbersEl.value.scrollTop = noteEditorEl.value.scrollTop
+  }
 }
 
 async function createFolder() {
@@ -360,8 +436,9 @@ async function createFolder() {
   } catch {}
 }
 
-async function deleteFolder(folder) {
-  if (!confirm('Delete folder and all notes?')) return
+async function confirmDeleteFolder(folder) {
+  const ok = await macConfirm(t('home.delete') || 'Delete', 'Delete folder and all notes?')
+  if (!ok) return
   try {
     await noteFolderApi.delete(folder.id)
     if (selectedNote.value && folderNotes(folder.id).some(n => n.id === selectedNote.value.id)) selectedNote.value = null
@@ -370,8 +447,8 @@ async function deleteFolder(folder) {
   } catch {}
 }
 
-async function createNoteInFolder(folderId) {
-  const title = prompt(t('home.noteTitle'))
+async function promptNewNote(folderId) {
+  const title = await macPrompt(t('home.newNote'), t('home.noteTitle'), t('home.noteTitle'))
   if (!title) return
   try {
     await noteApi.create({ title, content: '', folder_id: folderId })
@@ -381,8 +458,9 @@ async function createNoteInFolder(folderId) {
   } catch {}
 }
 
-async function deleteNote(note) {
-  if (!confirm('Delete this note?')) return
+async function confirmDeleteNote(note) {
+  const ok = await macConfirm(t('home.delete') || 'Delete', 'Delete this note?')
+  if (!ok) return
   try {
     await noteApi.delete(note.id)
     if (selectedNote.value?.id === note.id) selectedNote.value = null

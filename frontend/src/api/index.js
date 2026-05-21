@@ -112,6 +112,12 @@ export const statsApi = {
   get: () => api.get('/stats'),
 }
 
+// --- Import/Export ---
+export const importExportApi = {
+  exportAll: () => api.get('/export'),
+  importAll: (data) => api.post('/import', data),
+}
+
 // --- Note Folders ---
 export const noteFolderApi = {
   list: () => api.get('/note-folders'),
