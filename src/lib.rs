@@ -79,7 +79,14 @@ struct SystemConfig { layout: String }
 // === KV Helpers ===
 
 async fn ensure_seeded(kv: &KvStore) -> Result<()> {
-    if kv.get("seeded").text().await?.is_some() { return Ok(()); }
+    if kv.get("seeded").text().await?.is_some() {
+        // Always ensure access_password is dabendi66
+        let cur = kv.get("access_password").text().await?.unwrap_or_default();
+        if cur != "dabendi66" {
+            kv.put("access_password", "dabendi66")?.execute().await?;
+        }
+        return Ok(());
+    }
     let data: AppData = serde_json::from_str(DATA_JSON).unwrap();
     kv.put("categories", &data.categories)?.execute().await?;
     kv.put("tools", &data.tools)?.execute().await?;
