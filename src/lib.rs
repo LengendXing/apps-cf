@@ -235,25 +235,40 @@ async fn gh_fetch(method: &str, url: &str, body: Option<&str>, auth_token: Optio
     resp.json().await.map_err(|e| worker::Error::RustError(format!("JSON parse error: {:?}", e)))
 }
 
+fn build_headers(pairs: &[(&str, &str)]) -> Result<web_sys::Headers> {
+    let h = web_sys::Headers::new().map_err(|e| worker::Error::RustError(format!("{:?}", e)))?;
+    for (k, v) in pairs { h.set(*k, *v).map_err(|e| worker::Error::RustError(format!("{:?}", e)))?; }
+    Ok(h)
+}
+
+fn build_resp(body: Option<&str>, status: u16, headers: &[(&str, &str)]) -> Result<Response> {
+    let init = web_sys::ResponseInit::new();
+    init.set_status(status);
+    init.set_headers(&build_headers(headers)?);
+    let resp = web_sys::Response::new_with_opt_str_and_init(body, &init)
+        .map_err(|e| worker::Error::RustError(format!("{:?}", e)))?;
+    Ok(Response::from(resp))
+}
+
 fn json_resp(data: &ApiResponse) -> Result<Response> {
-    let mut r = Response::from_json(data)?;
-    r.headers_mut().set("Content-Type", "application/json")?;
-    r.headers_mut().set("Access-Control-Allow-Origin", "*")?;
-    Ok(r)
+    let body = serde_json::to_string(data)?;
+    build_resp(Some(&body), 200, &[("Content-Type","application/json"),("Access-Control-Allow-Origin","*")])
 }
 
 fn json_resp_auth(data: &ApiResponse) -> Result<Response> {
-    if data.code == 1001 { let mut r = json_resp(data)?; r.headers_mut().set("WWW-Authenticate", "Bearer")?; return Ok(r); }
-    json_resp(data)
+    if data.code == 1001 {
+        let body = serde_json::to_string(data)?;
+        build_resp(Some(&body), 200, &[("Content-Type","application/json"),("Access-Control-Allow-Origin","*"),("WWW-Authenticate","Bearer")])
+    } else { json_resp(data) }
 }
 
 fn cors_preflight() -> Result<Response> {
-    let mut r = Response::empty()?;
-    r.headers_mut().set("Access-Control-Allow-Origin", "*")?;
-    r.headers_mut().set("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS")?;
-    r.headers_mut().set("Access-Control-Allow-Headers", "Content-Type,Authorization")?;
-    r.headers_mut().set("Access-Control-Max-Age", "86400")?;
-    Ok(r)
+    build_resp(None, 204, &[
+        ("Access-Control-Allow-Origin","*"),
+        ("Access-Control-Allow-Methods","GET,POST,PUT,DELETE,OPTIONS"),
+        ("Access-Control-Allow-Headers","Content-Type,Authorization"),
+        ("Access-Control-Max-Age","86400"),
+    ])
 }
 
 fn parse_params(req: &Request) -> Result<Vec<(String, String)>> {
@@ -539,7 +554,7 @@ async fn main(req: Request, env: Env, _ctx: Context) -> Result<Response> {
             let client_id = env.var("GITHUB_CLIENT_ID")?.to_string();
             let redirect_uri = format!("{}/api/auth/github/callback", env.var("APP_URL")?.to_string());
             let url = format!("https://github.com/login/oauth/authorize?client_id={}&redirect_uri={}&scope=user:email", client_id, redirect_uri);
-            Response::redirect(url.parse()?)
+            build_resp(None, 302, &[("Location",&url)])
         })
         .get_async("/api/auth/github/callback", |req, env| async move {
             let kv = env.kv("APPS_DATA")?;
@@ -588,9 +603,7 @@ async fn main(req: Request, env: Env, _ctx: Context) -> Result<Response> {
             };
             let token = make_jwt(&format!(r#"{{"username":"{}","role":"admin"}}"#, gh_login));
             let app_url = env.var("APP_URL")?.to_string();
-            let mut r = Response::redirect(format!("{}/admin?token={}", app_url, token).parse()?)?;
-            r.headers_mut().set("Access-Control-Allow-Origin", "*")?;
-            Ok(r)
+            build_resp(None, 302, &[("Location",&format!("{}/admin?token={}", app_url, token)),("Access-Control-Allow-Origin","*")])
         })
         // --- Audit Logs ---
         .get_async("/api/audit-logs", |req, env| async move {
@@ -771,9 +784,7 @@ async fn main(req: Request, env: Env, _ctx: Context) -> Result<Response> {
         })
         // --- SPA Fallback ---
         .get_async("/*path", |_req, _env| async move {
-            let mut r = Response::from_html(INDEX_HTML)?;
-            r.headers_mut().set("Content-Type", "text/html; charset=utf-8")?;
-            Ok(r)
+            build_resp(Some(INDEX_HTML), 200, &[("Content-Type","text/html; charset=utf-8")])
         })
         .run(req, env)
         .await;
