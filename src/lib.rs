@@ -242,9 +242,10 @@ fn build_headers(pairs: &[(&str, &str)]) -> Result<web_sys::Headers> {
 }
 
 fn build_resp(body: Option<&str>, status: u16, headers: &[(&str, &str)]) -> Result<Response> {
+    use wasm_bindgen::JsCast;
     let init = web_sys::ResponseInit::new();
     init.set_status(status);
-    init.set_headers(&build_headers(headers)?);
+    init.set_headers(build_headers(headers)?.unchecked_ref());
     let resp = web_sys::Response::new_with_opt_str_and_init(body, &init)
         .map_err(|e| worker::Error::RustError(format!("{:?}", e)))?;
     Ok(Response::from(resp))
